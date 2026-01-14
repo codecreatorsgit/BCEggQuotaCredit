@@ -1,0 +1,18 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "18.20.0",
+    "sdksVersions": {},
+    "version": "1.21.0",
+    "libraryName": "quota-credit",
+    "libraryId": "b77c9758-2477-4c56-851a-b1730d6f51a7",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "quota-credit",
+    "solutionShortDescription": "quota-credit description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}

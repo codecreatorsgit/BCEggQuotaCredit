@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "quota-credit-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/quotaCredit/QuotaCreditWebPart.js",
+          "manifest": "./src/webparts/quotaCredit/QuotaCreditWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "QuotaCreditWebPartStrings": "lib/webparts/quotaCredit/loc/{locale}.js"
+  }
+}
