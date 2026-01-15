@@ -2,12 +2,13 @@ import * as React from 'react';
 import type { IQuotaCreditProps } from './IQuotaCreditProps';
 import './style.css'
 import { ApiService } from '../../services/apiservices';
+import { listNames } from '../../common/constants/ListNames';
 const editicon = require('../assets/edit.png')
 const deleteicon = require('../assets/delete.png')
 
 
 const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
-  const [Producers, setprocedures]: any = React.useState([]);
+  const [Producers, setProducers]: any = React.useState([]);
   const [QuotaCredit, setQuotaCredit]: any = React.useState([]);
   const [showmodel,setshowmodel] = React.useState(false)
 
@@ -17,11 +18,11 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   React.useEffect(() => {
     const produceritems = async () => {
       const user = await api.getCurrentUser();
-      const producerdowndata = await api.camelquery(user.Id, 'Producer Information')
+      const producerdowndata = await api.filterListItems(listNames.ProducerInformation,`BCEggAccount/Id eq ${user.Id}`,"Producer")
 
       let quotaCreditdowndata = await api.getListItems('Quota Credit Type', 'Title');
 
-      setprocedures(producerdowndata)
+      setProducers(producerdowndata)
       setQuotaCredit(quotaCreditdowndata)
       console.log(producerdowndata, 'drp Quota Credit Type')
     };
@@ -90,7 +91,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
           {/* <option disabled selected>Select Procedure</option> */}
           {Producers?.map((item: any) => {
             return (
-              <option value="">{item?.Producer}</option>
+              <option value={item?.Producer}>{item?.Producer}</option>
             )
           })}
         </select>
@@ -102,7 +103,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
           {/* <option disabled selected>Select Quota Credit</option> */}
            {QuotaCredit?.map((item: any) => {
             return (
-              <option value="">{item?.Title}</option>
+              <option value={item?.Title}>{item?.Title}</option>
             )
           })}
         </select>
