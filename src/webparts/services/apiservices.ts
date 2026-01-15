@@ -10,6 +10,26 @@ export class ApiService {
   }
 
   // Method to get items from a SharePoint list 
+
+  public async camelquery(id:number,listName:string){
+    const items = await sp.web.lists
+      .getByTitle(listName)
+      .getItemsByCAMLQuery({
+        ViewXml: `
+          <View>
+            <Query>
+              <Where>
+                <Eq>
+                  <FieldRef Name='BCEggAccount' LookupId='TRUE' />
+                  <Value Type='Integer'>${id}</Value>
+                </Eq>
+              </Where>
+            </Query>
+          </View>`
+      });
+      return items;
+  }
+
   public async getListItems(listName: string, selectColumns: string): Promise<any[]> {
     try {
       const items = await sp.web.lists.getByTitle(listName).items.select(selectColumns).get();
