@@ -5,7 +5,10 @@ export const listNames = {
     
 
     // Lists
-    ProducerInformation:"Producer Information"
+    ProducerInformation:"Producer Information",
+    QuotaCreditType:"Quota Credit Type",
+    QuotaCreditTypes:"Quota Credit Types",
+    FinalQuotaCreditUsageList:"FinalQuotaCreditUsageList",
 };
 
 export const status = {
@@ -21,5 +24,8 @@ export enum EmployeeStatus {
 export const alerts = {
     noitemselected: "No items selected to save!",
     successfully: "All items added successfully!",
-    error: "Error while saving items. Check console for details."
+    error: "Error while saving items. Check console for details.",
+    RequiredFields:"Please fill the required field:",
+    SuccessFullySubmited:"Record added successfully",
+    catcherrors:"Error while saving data"
 }

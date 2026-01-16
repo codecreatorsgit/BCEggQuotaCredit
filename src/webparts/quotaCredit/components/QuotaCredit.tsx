@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { IQuotaCreditProps } from './IQuotaCreditProps';
 import './style.css'
 import { ApiService } from '../../services/apiservices';
-import { listNames } from '../../common/constants/ListNames';
+import { alerts, listNames } from '../../common/constants/ListNames';
 const editicon = require('../assets/edit.png')
 const deleteicon = require('../assets/delete.png')
 
@@ -10,7 +10,19 @@ const deleteicon = require('../assets/delete.png')
 const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [Producers, setProducers]: any = React.useState([]);
   const [QuotaCredit, setQuotaCredit]: any = React.useState([]);
-  const [showmodel,setshowmodel] = React.useState(false)
+  const [QuotaCredittype, setQuotaCredittype]: any = React.useState([]);
+  const [showmodel, setshowmodel] = React.useState(false);
+  const [formData, setFormData] = React.useState<any>({
+    QuotaCreditType: '',
+    QuantityperWeek: '',
+    Flock: '',
+    ApplicationDate: new Date().toISOString().split('T')[0],
+    StartDate: '',
+    EndDate: '',
+    Description: ''
+  });
+  let subtype = React.useRef('')
+
 
   const api = new ApiService(context)
 
@@ -18,109 +30,251 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   React.useEffect(() => {
     const produceritems = async () => {
       const user = await api.getCurrentUser();
-      const producerdowndata = await api.filterListItems(listNames.ProducerInformation,`BCEggAccount/Id eq ${user.Id}`,"Producer")
+      const producerdowndata = await api.filterListItems(listNames.ProducerInformation, `BCEggAccount/Id eq ${user.Id}`, "Producer")
 
-      let quotaCreditdowndata = await api.getListItems('Quota Credit Type', 'Title');
+      let quotaCreditdowndata = await api.getListItems(listNames.QuotaCreditType, 'Title');
+      let quotaCreditTypedowndata = await api.getListItems(listNames.QuotaCreditTypes, 'Id,Title,Subtype,SubType_x0020__x002d__x0020_Desc');
 
       setProducers(producerdowndata)
       setQuotaCredit(quotaCreditdowndata)
-      console.log(producerdowndata, 'drp Quota Credit Type')
+      setQuotaCredittype(quotaCreditTypedowndata)
+      console.log(quotaCreditTypedowndata)
     };
     produceritems();
-    console.log(Producers)
+
   }, [])
+
+  const calculateEndDate = (startDate: string) => {
+    if (!startDate) return '';
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + 91); 
+    return date.toISOString().split('T')[0];
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    if (name === 'StartDate') {
+      const endDate = calculateEndDate(value);
+
+      setFormData((prev: any) => ({
+        ...prev,
+        StartDate: value,
+        EndDate: endDate
+      }));
+    }
+    else {
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+    if (name === "QuotaCreditType") {
+      let qtype = QuotaCredittype?.filter((item: any) => item?.Id === Number(value));
+      console.log(qtype, 'qtype');
+      subtype.current = qtype?.[0]?.Title
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+    const requiredFields = [
+      'QuotaCreditType',
+      'QuantityperWeek',
+      'Flock',
+      'ApplicationDate',
+      'StartDate',
+      'EndDate',
+      'Description'
+    ];
+
+    const emptyField = requiredFields.find((field:any) => !formData[field]);
+    if (emptyField) {
+      alert(`${alerts.RequiredFields} ${emptyField}`);
+      return;
+    }
+      const payload: any = {
+        QuotaCreditTypeId: Number(formData.QuotaCreditType), 
+        QuantityperWeek: Number(formData.QuantityperWeek),
+        Flock: formData.Flock,
+        ApplicationDate: formData.ApplicationDate,
+        StartDate: formData.StartDate,
+        EndDate: formData.EndDate,
+        Description: formData.Description
+      };
+      return;
+      await api.insertRecord(
+        listNames.FinalQuotaCreditUsageList,
+        payload
+      );
+      alert(alerts.SuccessFullySubmited);
+
+      setFormData({
+        QuotaCreditType: '',
+        QuantityperWeek: '',
+        Flock: '',
+        ApplicationDate: '',
+        StartDate: '',
+        EndDate: '',
+        Description: ''
+      });
+
+      setshowmodel(false);
+
+    } catch (error) {
+      console.error(error);
+      alert(alerts.catcherrors);
+    }
+  };
+
   return (
     <>
-  {showmodel &&
-    <div className="modal-overlay" id="transactionModal">
-    <div className="modal">
-        <h2>Add Quota Credit Usage Transaction</h2>
+      {showmodel &&
+        <div className="quota-modal-overlay" id="transactionModal">
+          <div className="quota-modal">
 
-        <div className="modal-row">
-            <div className="form-group">
+            <h2>Add Quota Credit Usage Transaction</h2>
+
+            <div className="quota-form-row">
+              <div className="quota-form-group">
                 <label>Quota Credit Type <span>*</span></label>
-                <select>
-                    <option>Select</option>
-                    <option>22-Utilized</option>
+                <select
+                  name="QuotaCreditType"
+                  value={formData.QuotaCreditType}
+                  onChange={handleChange}
+                >
+                  <option value="">Select</option>
+                  {QuotaCredittype?.map((item: any) => (
+                    <option
+                      key={item.Id}
+                      value={item.Id}
+                    >
+                      {item.SubType_x0020__x002d__x0020_Desc}
+                    </option>
+                  ))}
                 </select>
-            </div>
-            <div className="form-group">
+              </div>
+
+              <div className="quota-form-group">
                 <label>Quantity per Week <span>*</span></label>
-                <input type="number" placeholder="Enter"/>
+                <input
+                  type="number"
+                  name="QuantityperWeek"
+                  value={formData.QuantityperWeek}
+                  onChange={handleChange}
+                  placeholder="Enter"
+                />
+              </div>
             </div>
-        </div>
 
-        <div className="modal-row">
-            <div className="form-group">
+            <div className="quota-form-row">
+              <div className="quota-form-group">
                 <label>Flock <span>*</span></label>
-                <input type="text" placeholder="Enter" />
-            </div>
-            <div className="form-group">
+                <input
+                  type="text"
+                  name="Flock"
+                  value={formData.Flock}
+                  onChange={handleChange}
+                  placeholder="Enter"
+                />
+              </div>
+
+              <div className="quota-form-group">
                 <label>Application Date <span>*</span></label>
-                <input type="date"/>
+                <input
+                  type="date"
+                  name="ApplicationDate"
+                  value={formData.ApplicationDate}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
-        </div>
 
-        <div className="modal-row">
-            <div className="form-group">
+            <div className="quota-form-row">
+              <div className="quota-form-group">
                 <label>Start Date <span>*</span></label>
-                <input type="date"/>
-            </div>
-            <div className="form-group">
+                <input
+                  type="date"
+                  name="StartDate"
+                  value={formData.StartDate}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="quota-form-group">
                 <label>End Date <span>*</span></label>
-                <input type="date"/>
+                <input
+                  type="date"
+                  name="EndDate"
+                  value={formData.EndDate}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
+
+            <div className="quota-form-group">
+              <label>Description <span>*</span></label>
+              <textarea
+                name="Description"
+                value={formData.Description}
+                onChange={handleChange}
+                placeholder="Enter"
+              />
+            </div>
+
+            <div className="quota-modal-actions">
+              <button className="btn-cancel" onClick={() => setshowmodel(false)}>
+                Cancel
+              </button>
+
+              <button className="btn-submit" onClick={handleSubmit}>
+                Submit
+              </button>
+            </div>
+
+          </div>
         </div>
 
-        <div className="form-group">
-            <label>Description <span>*</span></label>
-            <textarea placeholder="Enter"></textarea>
+
+      }
+
+             <div className="quota-form-row">
+              <div className="quota-form-group">
+          <label>Producers <span>*</span></label>
+                 <select>
+            {/* <option disabled selected>Select Procedure</option> */}
+            {Producers?.map((item: any) => {
+              return (
+                <option value={item?.Producer}>{item?.Producer}</option>
+              )
+            })}
+          </select>
+              </div>
+
+              <div className="quota-form-group">
+          <label>Quota Credit Transaction Types <span>*</span></label>
+                <select>
+            {/* <option disabled selected>Select Quota Credit</option> */}
+            {QuotaCredit?.map((item: any) => {
+              return (
+                <option value={item?.Title}>{item?.Title}</option>
+              )
+            })}
+          </select>
+              </div>
+                  <div className="btn-group">
+          <button className="btn-cancel">Cancel</button>
+          <button className="btn-submit">Submit</button>
         </div>
+             </div>
 
-        <div className="modal-actions">
-            <button className="btn-cancel" onClick={()=> setshowmodel(prev => !prev)}>Cancel</button>
-            <button className="btn-submit">Submit</button>
-        </div>
-    </div>
-</div>
-  }
-    <div className="top-form">
-      <div className="form-group">
-        <label>Producers <span>*</span></label>
-        <select>
-          {/* <option disabled selected>Select Procedure</option> */}
-          {Producers?.map((item: any) => {
-            return (
-              <option value={item?.Producer}>{item?.Producer}</option>
-            )
-          })}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>Quota Credit Transaction Types <span>*</span></label>
-        <select>
-          {/* <option disabled selected>Select Quota Credit</option> */}
-           {QuotaCredit?.map((item: any) => {
-            return (
-              <option value={item?.Title}>{item?.Title}</option>
-            )
-          })}
-        </select>
-      </div>
-
-      <div className="btn-group">
-        <button className="btn-cancel">Cancel</button>
-        <button className="btn-submit">Submit</button>
-      </div>
-    </div><div className="card">
+      <div className="card">
         <div className="balance-title">Total Quota Credit Usage Balance</div>
         <div className="balance-label">Quota Credit Balance</div>
         <div className="balance-value">110671</div>
       </div><div className="card">
         <div className="section-header">
           <h2>Quota Credit Transaction</h2>
-          <button className="btn-add" onClick={()=> setshowmodel(prev => !prev)}>Add Transaction</button>
+          <button className="btn-add" onClick={() => setshowmodel(prev => !prev)}>Add Transaction</button>
         </div>
 
         <div className="table-wrapper">
@@ -171,6 +325,12 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 <th>Quantity per Day</th>
                 <th>Number of Days</th>
                 <th>Flock</th>
+                <th>Application Date</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Expiry Notified</th>
+                <th>Description</th>
+                <th>Transaction Complete Flag</th>
               </tr>
             </thead>
             <tbody>
@@ -182,47 +342,13 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 <td>2</td>
                 <td>59</td>
                 <td>21</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>22-Utilized</td>
-                <td>2424</td>
-                <td>404</td>
-                <td>5</td>
-                <td>57.71428571</td>
-                <td>42</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>22-Utilized</td>
-                <td>1239</td>
-                <td>413</td>
-                <td>2</td>
-                <td>59</td>
                 <td>21</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>22-Utilized</td>
-                <td>2424</td>
-                <td>404</td>
-                <td>5</td>
-                <td>57.71428571</td>
-                <td>42</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td>5</td>
-                <td>22-Utilized</td>
-                <td>1239</td>
-                <td>413</td>
-                <td>2</td>
-                <td>59</td>
                 <td>21</td>
-                <td>-</td>
+                <td>21</td>
+                <td>21</td>
+                <td>21</td>
+                <td>21</td>
+                <td>21</td>
               </tr>
             </tbody>
           </table>
