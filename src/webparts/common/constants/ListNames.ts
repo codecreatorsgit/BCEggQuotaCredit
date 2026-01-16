@@ -5,7 +5,9 @@ export const listNames = {
     
 
     // Lists
-    ProducerInformation:"Producer Information"
+    ProducerInformation:"Producer Information",
+    FinalQuotaCreditUsageList:"FinalQuotaCreditUsageList",
+    QuotaCreditTransactions:"QuotaCreditTransactions"
 };
 
 export const status = {
