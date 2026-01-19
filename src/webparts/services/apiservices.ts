@@ -41,7 +41,7 @@ export class ApiService {
     }
     catch (error) {
       console.error("Error fetching list items:", error);
-      throw error; // Re-throw the error for handling in the calling component 
+      throw error; 
     }
   }
 

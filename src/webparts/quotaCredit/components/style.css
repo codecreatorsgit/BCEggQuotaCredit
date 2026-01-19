@@ -232,3 +232,12 @@ filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(95%
     gap: 18px;
     margin-top: 28px;
 }
+button.btn-submit.update{
+    background: #6fa8dc !important;
+
+}
+
+button.btn-cancel {
+        background: #f4f4f4;
+
+}
