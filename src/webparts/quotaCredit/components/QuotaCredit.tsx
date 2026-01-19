@@ -31,6 +31,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [quotaCreditkey, setquotaCreditkey]: any = React.useState('');
   const [editingform, seteditingform]: any = React.useState(false);
   const [formoneId, setformoneId]: any = React.useState(0);
+  const [quotaCreditBalance, setquotaCreditBalance]: any = React.useState(0);
 
 
   const api = new ApiService(context)
@@ -42,6 +43,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     const produceritems = async () => {
       const user = await api.getCurrentUser();
       const producerdowndataf = await api.filterListItems(listNames.ProducerInformation, `BCEggAccount/Id eq ${user.Id}`, "*");
+      
       console.log(producerdowndataf, 'prd')
       //     const producerdowndata: ICamlQuery = {
       //       ViewXml: `
@@ -63,18 +65,21 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
 
       let quotaCreditdowndata = await api.getListItems(listNames.QuotaCreditType, 'Title');
-      let quotaCreditTypedowndata = await api.getListItems(listNames.QuotaCreditTypes, 'Id,Title,Subtype,SubType_x0020__x002d__x0020_Desc');
+      let quotaCreditTypedowndata = await api.filterListItems(listNames.QuotaCreditTypes,"TransactionCategory eq 'Usage'", 
+        'Id,Title,Subtype,SubType_x0020__x002d__x0020_Desc');
 
-      setProducers(producerdowndataf)
-      setQuotaCredit(quotaCreditdowndata)
-      setQuotaCredittype(quotaCreditTypedowndata)
+      setProducers(producerdowndataf);
+      setQuotaCredit(quotaCreditdowndata);
+      setQuotaCredittype(quotaCreditTypedowndata);
       //default selected 
-
+//setquotaCreditkey(quotaCreditdowndata?.[0]?.Title);
+console.log(quotaCreditkey)
+      setproducerkey(producerdowndataf?.[0]?.ID);
+      setquotaCreditBalance(TransactionService.fetchInitialQuotaofProducer(producerdowndataf,Number(producerdowndataf?.[0]?.ID)));
       let data = await cls.fetchCurrentTransactions(producerdowndataf?.[0]?.Title)
       let data2 = await cls.fetchHistoricalTransactions(quotaCreditdowndata?.[0]?.Title, producerdowndataf?.[0]?.Title);
       setTransactionTable(data)
-      setproducerkey(quotaCreditdowndata?.[0]?.Title)
-      setquotaCreditkey(producerdowndataf?.[0]?.Title)
+      
       setTransactionreportTable(data2)
     };
     produceritems();
@@ -141,15 +146,15 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         return;
       }
       const payload: any = {
-        QuotaCreditTypeId: Number(formData.QuotaCreditType),
-        QuantityperWeek: Number(formData.QuantityperWeek),
-        Flock: formData.Flock,
-        ApplicationDate: formData.ApplicationDate,
-        StartDate: formData.StartDate,
-        EndDate: formData.EndDate,
-        Description: formData.Description
+        Bc_Quota_Credit_Type: "Short Placement",
+        Bc_Quantity_per_Week: formData.QuantityperWeek,
+        Bc_Flock: formData.Flock,
+        Bc_Application_Date: formData.ApplicationDate,
+        Bc_Start_Date: formData.StartDate,
+        Bc_End_Date: formData.EndDate,
+        Bc_Description: formData.Description,
+        Bc_producerIDId:Number(producerkey)
       };
-      return;
       await api.insertRecord(
         listNames.FinalQuotaCreditUsageList,
         payload
@@ -165,29 +170,28 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         EndDate: '',
         Description: ''
       });
-
       setshowmodel(false);
-
     } catch (error) {
       console.error(error);
       alert(alerts.catcherrors);
     }
   };
 
-  async function filterbyprocucer(e: React.ChangeEvent<HTMLSelectElement>) {
+  async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
     setTransactionTable([])
-    setproducerkey('')
-    let value = e.target.value
-    let data = await cls.fetchCurrentTransactions(value)
-    setTransactionTable(data)
-    setproducerkey(value)
+     let value = e.target.value;
+    setproducerkey(value);
+    setquotaCreditBalance(TransactionService.fetchInitialQuotaofProducer(Producers,Number(value)));
+    let data = await cls.fetchCurrentTransactions(value);
+    setTransactionTable(data);
+    
   }
 
   async function filterbyquotacreadit(e: React.ChangeEvent<HTMLSelectElement>): Promise<void> {
+    setquotaCreditkey(e.target.value)
     setquotaCreditkey('');
     setTransactionreportTable([])
     let data2 = await cls.fetchHistoricalTransactions(e.target.value, producerkey);
-    setquotaCreditkey(e.target.value)
     setTransactionreportTable(data2)
   }
 
@@ -445,12 +449,12 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       <div className="quota-form-row">
         <div className="quota-form-group">
           <label>Producers <span>*</span></label>
-          <select value={producerkey} onChange={(e) => filterbyprocucer(e)}>
+          <select value={producerkey} onChange={(e) => filterbyProducer(e)}>
 
             <option disabled selected>Select Procedure</option>
             {Producers?.map((item: any) => {
               return (
-                <option value={item?.Title}>{item?.Producer}</option>
+                <option value={item?.ID}>{item?.Producer}</option>
               )
             })}
           </select>
@@ -458,7 +462,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
         <div className="quota-form-group">
           <label>Quota Credit Transaction Types <span>*</span></label>
-          <select value={quotaCreditkey} onChange={(e) => filterbyquotacreadit(e)}>
+          <select value={"Usage"} onChange={(e) => filterbyquotacreadit(e)}>
             {/* <option disabled selected>Select Quota Credit</option> */}
             {QuotaCredit?.map((item: any) => {
               return (
@@ -476,7 +480,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       <div className="card">
         <div className="balance-title">Total Quota Credit Usage Balance</div>
         <div className="balance-label">Quota Credit Balance</div>
-        <div className="balance-value">110671</div>
+        <div className="balance-value">{quotaCreditBalance}</div>
       </div><div className="card">
         <div className="section-header">
           <h2>Quota Credit Transaction</h2>
@@ -503,13 +507,13 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
                 return (
                   <tr>
-                    <td>{item?.QC_x0020_Subtype + '-' + item?.Description}</td>
-                    <td>{item?.QuantityperWeek}</td>
-                    <td>{item?.QuantityperWeek}</td>
-                    <td>{item?.ApplicationDate ? new Date(item.ApplicationDate).toLocaleDateString("en-US") : ''}</td>
-                    <td>{item?.StartDate ? new Date(item.StartDate).toLocaleDateString("en-US") : ''}</td>
-                    <td>{item?.EndDate ? new Date(item.EndDate).toLocaleDateString("en-US") : ''}</td>
-                    <td>{item?.Description}</td>
+                    <td>{item?.Bc_Quota_Credit_Type + '-' + item?.Bc_Description}</td>
+                    <td>{item?.Bc_Quantity_per_Week}</td>
+                    <td>{item?.Bc_Flock}</td>
+                    <td>{item?.Bc_Application_Date ? new Date(item.Bc_Application_Date).toLocaleDateString("en-US") : ''}</td>
+                    <td>{item?.Bc_Start_Date ? new Date(item.Bc_Start_Date).toLocaleDateString("en-US") : ''}</td>
+                    <td>{item?.Bc_End_Date ? new Date(item.Bc_End_Date).toLocaleDateString("en-US") : ''}</td>
+                    <td>{item?.Bc_Description}</td>
                     <td>
                       <div className="actions">
                         <span className="delete" onClick={()=> deletingitem(item)}><img src={deleteicon} alt="deleteicon" /></span>

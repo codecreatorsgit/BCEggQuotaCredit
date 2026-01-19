@@ -45,6 +45,101 @@ export class ApiService {
     }
   }
 
+  public async filterListItemsPaged(listName: string, filter: string, selectColumns: string): Promise<any[]> {
+    try {
+      let items = [];
+      let pagedData = await sp.web.lists.getByTitle(listName).items.select(selectColumns).filter(filter).top(500).getPaged();
+      
+items.push(...pagedData.results);
+
+while (pagedData.hasNext) {
+  pagedData = await pagedData.getNext();
+  items.push(...pagedData.results);
+}
+      return items;
+    }
+    catch (error) {
+      console.error("Error fetching list items:", error);
+      throw error; 
+    }
+  }
+
+   public async filterListItemsAsStream(
+  listName: string,
+  _filter: string,           // kept for signature compatibility (not used here)
+  selectColumns: string      // comma-separated internal names, e.g., "ID,Title,field_15"
+): Promise<any[]> {
+  try {
+
+    // Build <ViewFields> from selectColumns (safe default to ID + Title)
+    const cols = (selectColumns?.split(",").map(c => c.trim()).filter(Boolean) ?? []);
+    const uniqueCols = Array.from(new Set(["ID", "Title", ...cols]));
+    const viewFieldsXml = uniqueCols
+      .map(c => `<FieldRef Name='${c}' />`)
+      .join("");
+
+    // CAML Query:
+    // field_15 > 2021-01-01T00:00:00Z
+    // If your column is "Date Only", this still works;
+    // for "Date & Time", we also include IncludeTimeValue.
+    const viewXml = `
+      <View>
+        <Query>
+          <Where>
+            <Eq>
+              <FieldRef Name='LinkTitle' />
+              <Value Type='String'>2024</Value>
+            </Eq>
+          </Where>
+          <OrderBy>
+            <FieldRef Name='ID' Ascending='TRUE' />
+          </OrderBy>
+        </Query>
+        <ViewFields>
+          ${viewFieldsXml}
+        </ViewFields>
+        <RowLimit Paged="TRUE">5000</RowLimit>
+      </View>`.trim();
+
+    const allRows: any[] = [];
+
+    // First page
+    let result = await sp.web.lists.getByTitle(listName).renderListDataAsStream({
+      ViewXml: viewXml,
+      DatesInUtc: true,           // ensure UTC dates
+      RenderOptions: 2,           // ClientRender to get "Row" nicely
+      OverrideViewXml: "true"       // forces using our ViewXml instead of default view
+    });
+
+    if (result?.Row?.length) {
+      allRows.push(...result.Row);
+    }
+
+    // Page through results if NextHref is present
+    while (result?.NextHref) {
+      result = await sp.web.lists.getByTitle(listName).renderListDataAsStream({
+        Paging: result.NextHref,
+        ViewXml: viewXml,
+        DatesInUtc: true,
+        RenderOptions: 2,
+        OverrideViewXml: "true"
+      });
+
+      if (result?.Row?.length) {
+        allRows.push(...result.Row);
+      } else {
+        break;
+      }
+    }
+
+    return allRows;
+  } catch (error) {
+    console.error("Error fetching list items as stream:", error);
+    throw error;
+  }
+}
+
+
   public async filterListItemsWithExpand(listName: string, filter: string, selectColumns: string, expand: string): Promise<any[]> {
     try {
       const items = await sp.web.lists.getByTitle(listName).items.select(selectColumns).filter(filter).expand(expand).get();

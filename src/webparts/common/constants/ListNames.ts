@@ -1,4 +1,4 @@
-export const BASE_URL = "/sites/ProducerPortal"
+export const BASE_URL = "/sites/BCEggAdminPortal"
 
 export const listNames = {
     // Libraries
@@ -9,7 +9,7 @@ export const listNames = {
     QuotaCreditType:"Quota Credit Type",
     QuotaCreditTypes:"Quota Credit Types",
     FinalQuotaCreditUsageList:"FinalQuotaCreditUsageList",
-    QuotaCreditTransactions:"QuotaCreditTransactions"
+    QuotaCreditTransactions:"Detail List Quota Transaction"
 };
 
 export const status = {
