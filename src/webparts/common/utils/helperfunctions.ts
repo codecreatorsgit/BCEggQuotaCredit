@@ -39,15 +39,9 @@ export const formatDateFromString = (
     }
     return `${mm}/${dd}/${yyyy}`;
 };
-export const getCurrentDate = (day?: number): string => {
+export const getCurrentDate = (): string => {
     const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = today.getMonth() + 1;
-
-    const selectedDay = (day && day >= 1 && day <= 31) ? day : today.getDate();
-
-    const pad = (num: number): string => (num < 10 ? '0' + num : '' + num);
-    return `${yyyy}-${pad(mm)}-${pad(selectedDay)}`;
+   return today.toISOString().split("T")[0];
 };
 
 export function getFormattedCurrentDate(
@@ -61,8 +55,8 @@ export function getFormattedCurrentDate(
       ? { year: 'numeric', month: 'long', day: 'numeric' }
       : preset === 'medium'
       ? { year: 'numeric', month: 'short', day: 'numeric' }
-      : { timeZoneName: 'short' }; // short → locale-specific (e.g., 1/20/26)
-
+      : { year: 'numeric', month: '2-digit', day: '2-digit' }; // short → locale-specific (e.g., 1/20/26)
+console.log(new Intl.DateTimeFormat('en-US', { ...options, timeZone }).format(now))
   return new Intl.DateTimeFormat('en-US', { ...options, timeZone }).format(now);
 }
 

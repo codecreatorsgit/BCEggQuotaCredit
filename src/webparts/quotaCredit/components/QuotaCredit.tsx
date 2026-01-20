@@ -5,7 +5,7 @@ import { ApiService } from '../../services/apiservices';
 import { alerts, listNames } from '../../common/constants/ListNames';
 // import { ICamlQuery, sp } from '@pnp/sp/presets/all';
 import { TransactionService } from '../../business/transactionservice';
-import { daysBetween, formatDateFromString, getFormattedCurrentDate, weeksBetween } from '../../common/utils/helperfunctions';
+import { daysBetween, formatDate, formatDateFromString, getCurrentDate, weeksBetween } from '../../common/utils/helperfunctions';
 // import { map } from 'lodash';
 const editicon = require('../assets/edit.png')
 const deleteicon = require('../assets/delete.png')
@@ -20,7 +20,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     QuotaCreditType: '',
     QuantityperWeek: '',
     Flock: '',
-    ApplicationDate: getFormattedCurrentDate('short'),
+    ApplicationDate: getCurrentDate(),
     StartDate: '',
     EndDate: '',
     Description: ''
@@ -91,7 +91,7 @@ console.log(quotaCreditkey)
     if (!startDate) return '';
     const date = new Date(startDate);
     date.setDate(date.getDate() + 91);
-    return formatDateFromString(date.toDateString())
+    return formatDate(date)
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -216,9 +216,6 @@ console.log(quotaCreditkey)
   }
 
   async function deletingitem(item:any){
-    alert(item?.ID)
-    return;
-    await api.deleteRecord(item?.ID,listNames.FinalQuotaCreditUsageList)
   }
 
 
