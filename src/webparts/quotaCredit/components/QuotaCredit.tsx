@@ -204,7 +204,6 @@ console.log(quotaCreditkey)
     setFormStatus('editing');
     setshowmodel(true);
     console.log(item, 't1');
-<<<<<<< HEAD
     setformoneId(0)
     const formatDate = (date: any) =>
       date ? new Date(date).toISOString().split('T')[0] : '';
@@ -231,7 +230,6 @@ console.log(quotaCreditkey)
   Description: item?.Bc_Description ?? ''
 });
 
-=======
     setformoneId(0);
     seteditingform(true);
     setFormData({
@@ -244,7 +242,6 @@ console.log(quotaCreditkey)
       EndDate: formatDateFromString(item?.EndDate),
       Description: item?.Description ?? ''
     });
->>>>>>> 49647c1ff09fee05e4ebd18639de85f95e085536
     setformoneId(item?.ID)
   }
 
@@ -522,3 +519,7 @@ console.log(quotaCreditkey)
 }
 
 export default QuotaCredit
+function seteditingform(arg0: boolean) {
+  throw new Error('Function not implemented.');
+}
+
