@@ -5,6 +5,7 @@ import { ApiService } from '../../services/apiservices';
 import { alerts, listNames } from '../../common/constants/ListNames';
 // import { ICamlQuery, sp } from '@pnp/sp/presets/all';
 import { TransactionService } from '../../business/transactionservice';
+import { daysBetween, formatDate, formatDateFromString, getCurrentDate, weeksBetween } from '../../common/utils/helperfunctions';
 // import { map } from 'lodash';
 const editicon = require('../assets/edit.png')
 const deleteicon = require('../assets/delete.png')
@@ -19,7 +20,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     QuotaCreditType: '',
     QuantityperWeek: '',
     Flock: '',
-    ApplicationDate: new Date().toISOString().split('T')[0],
+    ApplicationDate: getCurrentDate(),
     StartDate: '',
     EndDate: '',
     Description: ''
@@ -77,9 +78,9 @@ const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('su
 //setquotaCreditkey(quotaCreditdowndata?.[0]?.Title);
 console.log(quotaCreditkey)
       setproducerkey(producerdowndataf?.[0]?.ID);
-      setquotaCreditBalance(TransactionService.fetchInitialQuotaofProducer(producerdowndataf,Number(producerdowndataf?.[0]?.ID)));
-      let data = await cls.fetchCurrentTransactions(producerdowndataf?.[0]?.Title)
-      let data2 = await cls.fetchHistoricalTransactions(quotaCreditdowndata?.[0]?.Title, producerdowndataf?.[0]?.Title);
+      let data = await cls.fetchCurrentTransactions(Number(producerdowndataf?.[0]?.ID))
+      let data2 = await cls.fetchHistoricalTransactions(Number(producerdowndataf?.[0]?.ID));
+      setquotaCreditBalance(cls.fetchInitialQuotaofProducer(producerdowndataf,Number(producerdowndataf?.[0]?.ID)));
       setTransactionTable(data)
       
       setTransactionreportTable(data2)
@@ -92,7 +93,7 @@ console.log(quotaCreditkey)
     if (!startDate) return '';
     const date = new Date(startDate);
     date.setDate(date.getDate() + 91);
-    return date.toISOString().split('T')[0];
+    return formatDate(date)
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -122,8 +123,6 @@ console.log(quotaCreditkey)
   };
 
   async function updatingform(){
-    alert('its working');
-    return;
     await api.updateRecord(formoneId,listNames.FinalQuotaCreditUsageList,{
       ...formData
     });
@@ -183,9 +182,12 @@ console.log(quotaCreditkey)
     setTransactionTable([])
      let value = e.target.value;
     setproducerkey(value);
-    setquotaCreditBalance(TransactionService.fetchInitialQuotaofProducer(Producers,Number(value)));
-    let data = await cls.fetchCurrentTransactions(value);
-    setTransactionTable(data);
+    
+    let _currentData = await cls.fetchCurrentTransactions(Number(value));
+    let _historicalData = await cls.fetchHistoricalTransactions(Number(value));
+    setTransactionreportTable(_historicalData);
+    setTransactionTable(_currentData);
+    setquotaCreditBalance(cls.fetchInitialQuotaofProducer(Producers,Number(value)));
     
   }
 
@@ -193,8 +195,8 @@ console.log(quotaCreditkey)
     setquotaCreditkey(e.target.value)
     setquotaCreditkey('');
     setTransactionreportTable([])
-    let data2 = await cls.fetchHistoricalTransactions(e.target.value, producerkey);
-    setTransactionreportTable(data2)
+    let _historicalData = await cls.fetchHistoricalTransactions(Number(producerkey));
+    setTransactionreportTable(_historicalData)
   }
 
 
@@ -202,6 +204,7 @@ console.log(quotaCreditkey)
     setFormStatus('editing');
     setshowmodel(true);
     console.log(item, 't1');
+<<<<<<< HEAD
     setformoneId(0)
     const formatDate = (date: any) =>
       date ? new Date(date).toISOString().split('T')[0] : '';
@@ -228,13 +231,24 @@ console.log(quotaCreditkey)
   Description: item?.Bc_Description ?? ''
 });
 
+=======
+    setformoneId(0);
+    seteditingform(true);
+    setFormData({
+      ...formData,
+      QuotaCreditType: item?.QC_x0020_Subtype + ' - ' + item?.Description,
+      QuantityperWeek: item?.QuantityperWeek,
+      Flock: item?.QuantityperWeek,
+      ApplicationDate: formatDateFromString(item?.ApplicationDate),
+      StartDate: formatDateFromString(item?.StartDate),
+      EndDate: formatDateFromString(item?.EndDate),
+      Description: item?.Description ?? ''
+    });
+>>>>>>> 49647c1ff09fee05e4ebd18639de85f95e085536
     setformoneId(item?.ID)
   }
 
   async function deletingitem(item:any){
-    alert(item?.ID)
-    return;
-    await api.deleteRecord(item?.ID,listNames.FinalQuotaCreditUsageList)
   }
 
   
@@ -435,16 +449,14 @@ console.log(quotaCreditkey)
             </thead>
             <tbody>
               {TransactionTable?.map((item: any) => {
-
-
                 return (
                   <tr>
                     <td>{item?.Bc_Quota_Credit_Type}</td>
                     <td>{item?.Bc_Quantity_per_Week}</td>
                     <td>{item?.Bc_Flock}</td>
-                    <td>{item?.Bc_Application_Date ? new Date(item.Bc_Application_Date).toLocaleDateString("en-US") : ''}</td>
-                    <td>{item?.Bc_Start_Date ? new Date(item.Bc_Start_Date).toLocaleDateString("en-US") : ''}</td>
-                    <td>{item?.Bc_End_Date ? new Date(item.Bc_End_Date).toLocaleDateString("en-US") : ''}</td>
+                    <td>{item?.Bc_Application_Date ? formatDateFromString(item.Bc_Application_Date) : ''}</td>
+                    <td>{item?.Bc_Start_Date ? formatDateFromString(item.Bc_Start_Date) : ''}</td>
+                    <td>{item?.Bc_End_Date ? formatDateFromString(item.Bc_End_Date) : ''}</td>
                     <td>{item?.Bc_Description}</td>
                     <td>
                       <div className="actions">
@@ -485,19 +497,19 @@ console.log(quotaCreditkey)
               {TransactionreportTable?.map((item: any) => {
                 return (
                   <tr>
-                    <td>{item?.field_10}</td>
-                    <td>{item?.field_2}</td>
-                    <td>{item?.field_8}</td>
-                    <td>{item?.field_4}</td>
-                    <td>{item?.field_11}</td>
-                    <td>{item?.field_26}</td>
-                    <td>{item?.field_23}</td>
-                    <td>{item?.field_23}</td>
-                    <td>{item?.field_5 ? new Date(item.field_5).toLocaleDateString("en-US") : ''}</td>
-                    <td>{item?.field_27 ? new Date(item.field_27).toLocaleDateString("en-US") : ''}</td>
-                    <td>{item?.field_15 ? new Date(item.field_15).toLocaleDateString("en-US") : ''}</td>
+                    <td>{item?.Id}</td>
+                    <td>{item?.Bc_Transaction_Type}</td>
+                    <td>{item?.bc_quantityPerWeek}</td>
+                    <td>{item?.bc_quantityPerWeek}</td>
+                    <td>{weeksBetween(item.bc_startDate,item.bc_endDate)}</td>
+                    <td>{item?.bc_quantityPerDay}</td>
+                    <td>{daysBetween(item.bc_startDate,item.bc_endDate)}</td>
+                    <td>{item?.bc_flock}</td>
+                    <td>{item?.Bc_Date ? formatDateFromString(item.Bc_Date) : ''}</td>
+                    <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate): ''}</td>
+                    <td>{item?.bc_endDate ? formatDateFromString(item.bc_endDate) : ''}</td>
                     <td>{item?.field_19}</td>
-                    <td>{item?.field_6}</td>
+                    <td>{item?.Bc_Comment}</td>
                     <td>{item?.field_10}</td>
                   </tr>
                 )
