@@ -3,7 +3,9 @@ import { ApiService } from "../services/apiservices";
 
 // Business Layer
 export class TransactionService {
-api:any;
+
+private _transactionHistory:any;
+  api:any;
      constructor(context: any) {
         // Initialize PnPjs with the context 
         this.api = new ApiService(context)
@@ -17,24 +19,29 @@ api:any;
     return transactions.reduce((sum: any, t: { amount: any; }) => sum + t.amount, 0);
   }
 
-  static fetchInitialQuotaofProducer(producers:any, producerid:number): number {
-    return producers.filter((x:any) => {return x.Id == producerid})[0].IssuedQuota;
+  public  fetchInitialQuotaofProducer(producers:any, producerid:number): number {
+    
+const totalQuantityPerWeek = this._transactionHistory.reduce((sum: any, item: { bc_quantityPerWeek: any; }) => {
+  return sum + (item.bc_quantityPerWeek || 0);
+}, 0);
+
+    return producers.filter((x:any) => {return x.Id == producerid})[0].IssuedQuota-totalQuantityPerWeek;
   }
 
   // oper table kle
-  public async fetchCurrentTransactions(producerid:string):Promise<any>{
+  public async fetchCurrentTransactions(producerid:number):Promise<any>{
     const quotaCreditTransactions = 
     await this.api.filterListItems(listNames.FinalQuotaCreditUsageList,
         `Bc_applicationStatus eq 'Pending Approval' and Bc_producerIDId eq '${producerid}'`,"*")
-        console.log(quotaCreditTransactions,'quo')
     return quotaCreditTransactions;
   }
 
   // neecy table kle  // `ID eq 1`,"*")
-  public async fetchHistoricalTransactions(transactiontype:string,title:string):Promise<any>{
+  public async fetchHistoricalTransactions(producerid:number):Promise<any>{
     const quotaCreditTransactions = 
-    await this.api.filterListItemsAsStream(listNames.QuotaCreditTransactions,
-         `Modified gt datetime'2024-01-01T00:00:00Z' and field_2 eq '${transactiontype}' and LinkTitle eq '${title}'` ,"*")
+    await this.api.filterListItems(listNames.QuotaCreditTransactions,
+         `Bc_Transaction_Type eq 'Usage' and bc_producerId eq '${producerid}'` ,"*");
+         this._transactionHistory=quotaCreditTransactions;
     return quotaCreditTransactions;
   }
 }
