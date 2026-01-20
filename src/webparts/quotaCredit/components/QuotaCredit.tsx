@@ -29,9 +29,11 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [TransactionreportTable, setTransactionreportTable]: any = React.useState([]);
   const [producerkey, setproducerkey]: any = React.useState('');
   const [quotaCreditkey, setquotaCreditkey]: any = React.useState('');
-  const [editingform, seteditingform]: any = React.useState(false);
+  // const [editingform, seteditingform]: any = React.useState(false);
   const [formoneId, setformoneId]: any = React.useState(0);
   const [quotaCreditBalance, setquotaCreditBalance]: any = React.useState(0);
+const [enableEndDate, setEnableEndDate] = React.useState(false);
+const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('submitting');
 
 
   const api = new ApiService(context)
@@ -197,22 +199,35 @@ console.log(quotaCreditkey)
 
 
   function Edidintgform(item: any): void {
+    setFormStatus('editing');
+    setshowmodel(true);
     console.log(item, 't1');
     setformoneId(0)
     const formatDate = (date: any) =>
       date ? new Date(date).toISOString().split('T')[0] : '';
 
-    seteditingform(true);
-    setFormData({
-      ...formData,
-      QuotaCreditType: item?.QC_x0020_Subtype + ' - ' + item?.Description,
-      QuantityperWeek: item?.QuantityperWeek,
-      Flock: item?.QuantityperWeek,
-      ApplicationDate: formatDate(item?.ApplicationDate),
-      StartDate: formatDate(item?.StartDate),
-      EndDate: formatDate(item?.EndDate),
-      Description: item?.Description ?? ''
-    });
+
+
+  //     setFormData({
+  //   QuotaCreditType: item?.Bc_Quota_Credit_Type + ' - ' + item?.Bc_Description,
+  //   QuantityperWeek: item?.Bc_Quantity_per_Week ?? '',
+  //   Flock: item?.Bc_Flock ?? '',
+  //   ApplicationDate: formatDate(item?.Bc_Application_Date),
+  //   StartDate: formatDate(item?.Bc_Start_Date),
+  //   EndDate: formatDate(item?.Bc_End_Date),
+  //   Description: item?.Bc_Description ?? ''
+  // });
+  setFormData({
+  QuotaCreditType:
+    item?.Bc_Quota_Credit_Type,
+  QuantityperWeek: item?.Bc_Quantity_per_Week,
+  Flock: item?.Bc_Flock,
+  ApplicationDate: formatDate(item?.Bc_Application_Date),
+  StartDate: formatDate(item?.Bc_Start_Date),
+  EndDate: formatDate(item?.Bc_End_Date),
+  Description: item?.Bc_Description ?? ''
+});
+
     setformoneId(item?.ID)
   }
 
@@ -221,6 +236,8 @@ console.log(quotaCreditkey)
     return;
     await api.deleteRecord(item?.ID,listNames.FinalQuotaCreditUsageList)
   }
+
+  
 
 
   return (
@@ -241,116 +258,6 @@ console.log(quotaCreditkey)
                   onChange={handleChange}
                 >
                   <option value="">Select</option>
-                  {QuotaCredittype?.map((item: any) => (
-                    <option
-                      key={item.Id}
-                      value={item.Id}
-                    >
-                      {item.SubType_x0020__x002d__x0020_Desc}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="quota-form-group">
-                <label>Quantity per Week <span>*</span></label>
-                <input
-                  type="number"
-                  name="QuantityperWeek"
-                  value={formData.QuantityperWeek}
-                  onChange={handleChange}
-                  placeholder="Enter"
-                />
-              </div>
-            </div>
-
-            <div className="quota-form-row">
-              <div className="quota-form-group">
-                <label>Flock <span>*</span></label>
-                <input
-                  type="text"
-                  name="Flock"
-                  value={formData.Flock}
-                  onChange={handleChange}
-                  placeholder="Enter"
-                />
-              </div>
-
-              <div className="quota-form-group">
-                <label>Application Date <span>*</span></label>
-                <input
-                  type="date"
-                  name="ApplicationDate"
-                  value={formData.ApplicationDate}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="quota-form-row">
-              <div className="quota-form-group">
-                <label>Start Date <span>*</span></label>
-                <input
-                  type="date"
-                  name="StartDate"
-                  value={formData.StartDate}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="quota-form-group">
-                <label>End Date <span>*</span></label>
-                <input
-                  type="date"
-                  name="EndDate"
-                  value={formData.EndDate}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="quota-form-group">
-              <label>Description <span>*</span></label>
-              <textarea
-                name="Description"
-                value={formData.Description}
-                onChange={handleChange}
-                placeholder="Enter"
-              />
-            </div>
-
-            <div className="quota-modal-actions">
-              <button className="btn-cancel" onClick={() => setshowmodel(false)}>
-                Cancel
-              </button>
-
-              <button className="btn-submit" onClick={handleSubmit}>
-                Submit
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-
-      }
-
-      {editingform &&
-        <div className="quota-modal-overlay" id="transactionModal">
-          <div className="quota-modal">
-
-            <h2>Edit Quota Credit Usage Transaction</h2>
-
-            <div className="quota-form-row">
-              <div className="quota-form-group">
-                <label>Quota Credit Type <span>*</span></label>
-                <select
-
-                  name="QuotaCreditType"
-                  value={formData.QuotaCreditType}
-                  onChange={handleChange}
-                >
-                  <option selected disabled>Select</option>
                   {QuotaCredittype?.map((item: any) => (
                     <option
                       key={item.Id}
@@ -415,10 +322,28 @@ console.log(quotaCreditkey)
                   name="EndDate"
                   value={formData.EndDate}
                   onChange={handleChange}
+                  disabled={!enableEndDate}
                 />
               </div>
             </div>
 
+
+<div className="quota-form-row">
+  <div className="quota-form-group">
+    <label>13 weeks(s) and 0 days(0)</label>
+  </div>
+
+  <div className="quota-form-group checkbox-inline">
+    <label>
+      <input
+        type="checkbox"
+        checked={enableEndDate}
+        onChange={(e) => setEnableEndDate(e.target.checked)}
+      />
+      <span>I would like to pick a different Date</span>
+    </label>
+  </div>
+</div>
             <div className="quota-form-group">
               <label>Description <span>*</span></label>
               <textarea
@@ -430,14 +355,16 @@ console.log(quotaCreditkey)
             </div>
 
             <div className="quota-modal-actions">
-              <button className="btn-cancel update" onClick={() => seteditingform(false)}>
-
+              <button className="btn-cancel" onClick={() => setshowmodel(false)}>
                 Cancel
               </button>
 
-              <button className="btn-submit update" onClick={updatingform}>
-                Save
+              <button
+                className={`btn-submit ${formStatus === "editing" ? 'updateone' : ''}`}
+                onClick={formStatus === "submitting" ? handleSubmit : updatingform}>
+                {formStatus === "submitting" ? "Submit" : "Save"}
               </button>
+
             </div>
 
           </div>
@@ -446,6 +373,7 @@ console.log(quotaCreditkey)
 
       }
 
+     
       <div className="quota-form-row">
         <div className="quota-form-group">
           <label>Producers <span>*</span></label>
@@ -484,7 +412,11 @@ console.log(quotaCreditkey)
       </div><div className="card">
         <div className="section-header">
           <h2>Quota Credit Transaction</h2>
-          <button className="btn-add" onClick={() => setshowmodel(prev => !prev)}>Add Transaction</button>
+          <button className="btn-add" onClick={() => {
+            setFormStatus('submitting')
+            setshowmodel(prev => !prev)
+            
+            }}>Add Transaction</button>
         </div>
 
         <div className="table-wrapper">
@@ -507,7 +439,7 @@ console.log(quotaCreditkey)
 
                 return (
                   <tr>
-                    <td>{item?.Bc_Quota_Credit_Type + '-' + item?.Bc_Description}</td>
+                    <td>{item?.Bc_Quota_Credit_Type}</td>
                     <td>{item?.Bc_Quantity_per_Week}</td>
                     <td>{item?.Bc_Flock}</td>
                     <td>{item?.Bc_Application_Date ? new Date(item.Bc_Application_Date).toLocaleDateString("en-US") : ''}</td>

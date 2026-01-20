@@ -187,7 +187,7 @@ filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(95%
 }
 
 .quota-form-group label span{
-    color: #f37021;
+    color: #323130 !important;
 }
 
 /* ===== INPUT / SELECT ===== */
@@ -232,7 +232,7 @@ filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(95%
     gap: 18px;
     margin-top: 28px;
 }
-button.btn-submit.update{
+button.btn-submit.updateone{
     background: #6fa8dc !important;
 
 }
@@ -240,4 +240,26 @@ button.btn-submit.update{
 button.btn-cancel {
         background: #f4f4f4;
 
+}
+
+
+
+.quota-form-row .checkbox-inline input[type="checkbox"] {
+    width: 24px;     
+    height: 24px;    
+    cursor: pointer;  
+    accent-color: #ff9800; 
+    margin-right: 8px; 
+}
+
+.quota-form-row .checkbox-inline label {
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #323130 !important;
+}
+
+input[disabled] {
+    background: #f4f4f4;
 }
