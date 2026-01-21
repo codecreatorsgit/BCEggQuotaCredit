@@ -112,7 +112,10 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     }
     return true;
   };
-  const buildPayload = () => cls.Formpayload(formData, producerkey, status);
+  // const buildPayload = () => cls.Formpayload(formData, producerkey, status);
+  const buildPayload = (): Record<string, any> =>
+  cls.Formpayload(formData, Number(producerkey), status);
+
 
   const resetForm = () => {
     setFormData({
