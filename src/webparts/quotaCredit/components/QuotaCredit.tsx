@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { IQuotaCreditProps } from './IQuotaCreditProps';
 import './style.css'
 import { ApiService } from '../../services/apiservices';
-import { alerts, listNames } from '../../common/constants/ListNames';
+import { alerts, listNames, status } from '../../common/constants/ListNames';
 // import { ICamlQuery, sp } from '@pnp/sp/presets/all';
 import { TransactionService } from '../../business/transactionservice';
 import { daysBetween, formatDate, formatDateFromString, getCurrentDate, weeksBetween } from '../../common/utils/helperfunctions';
@@ -33,8 +33,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   // const [editingform, seteditingform]: any = React.useState(false);
   const [formoneId, setformoneId]: any = React.useState(0);
   const [quotaCreditBalance, setquotaCreditBalance]: any = React.useState(0);
-const [enableEndDate, setEnableEndDate] = React.useState(false);
-const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('submitting');
+  const [enableEndDate, setEnableEndDate] = React.useState(false);
+  const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('submitting');
 
 
   const api = new ApiService(context)
@@ -46,7 +46,7 @@ const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('su
     const produceritems = async () => {
       const user = await api.getCurrentUser();
       const producerdowndataf = await api.filterListItems(listNames.ProducerInformation, `BCEggAccount/Id eq ${user.Id}`, "*");
-      
+
       console.log(producerdowndataf, 'prd')
       //     const producerdowndata: ICamlQuery = {
       //       ViewXml: `
@@ -68,21 +68,21 @@ const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('su
 
 
       let quotaCreditdowndata = await api.getListItems(listNames.QuotaCreditType, 'Title');
-      let quotaCreditTypedowndata = await api.filterListItems(listNames.QuotaCreditTypes,"TransactionCategory eq 'Usage'", 
+      let quotaCreditTypedowndata = await api.filterListItems(listNames.QuotaCreditTypes, "TransactionCategory eq 'Usage'",
         'Id,Title,Subtype,SubType_x0020__x002d__x0020_Desc');
 
       setProducers(producerdowndataf);
       setQuotaCredit(quotaCreditdowndata);
       setQuotaCredittype(quotaCreditTypedowndata);
       //default selected 
-//setquotaCreditkey(quotaCreditdowndata?.[0]?.Title);
-console.log(quotaCreditkey)
+      //setquotaCreditkey(quotaCreditdowndata?.[0]?.Title);
+      console.log(quotaCreditkey)
       setproducerkey(producerdowndataf?.[0]?.ID);
       let data = await cls.fetchCurrentTransactions(Number(producerdowndataf?.[0]?.ID))
       let data2 = await cls.fetchHistoricalTransactions(Number(producerdowndataf?.[0]?.ID));
-      setquotaCreditBalance(cls.fetchInitialQuotaofProducer(producerdowndataf,Number(producerdowndataf?.[0]?.ID)));
+      setquotaCreditBalance(cls.fetchInitialQuotaofProducer(producerdowndataf, Number(producerdowndataf?.[0]?.ID)));
       setTransactionTable(data)
-      
+
       setTransactionreportTable(data2)
     };
     produceritems();
@@ -122,8 +122,8 @@ console.log(quotaCreditkey)
     }
   };
 
-  async function updatingform(){
-    await api.updateRecord(formoneId,listNames.FinalQuotaCreditUsageList,{
+  async function updatingform() {
+    await api.updateRecord(formoneId, listNames.FinalQuotaCreditUsageList, {
       ...formData
     });
     alert(alerts.SuccessFullySubmited)
@@ -147,14 +147,15 @@ console.log(quotaCreditkey)
         return;
       }
       const payload: any = {
-        Bc_Quota_Credit_Type: "Short Placement",
+        Bc_Quota_Credit_Type: formData.QuotaCreditType,
         Bc_Quantity_per_Week: formData.QuantityperWeek,
         Bc_Flock: formData.Flock,
         Bc_Application_Date: formData.ApplicationDate,
         Bc_Start_Date: formData.StartDate,
         Bc_End_Date: formData.EndDate,
         Bc_Description: formData.Description,
-        Bc_producerIDId:Number(producerkey)
+        Bc_producerIDId: Number(producerkey),
+        Bc_applicationStatus: status.PendingApproval
       };
       await api.insertRecord(
         listNames.FinalQuotaCreditUsageList,
@@ -180,15 +181,15 @@ console.log(quotaCreditkey)
 
   async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
     setTransactionTable([])
-     let value = e.target.value;
+    let value = e.target.value;
     setproducerkey(value);
-    
+
     let _currentData = await cls.fetchCurrentTransactions(Number(value));
     let _historicalData = await cls.fetchHistoricalTransactions(Number(value));
     setTransactionreportTable(_historicalData);
     setTransactionTable(_currentData);
-    setquotaCreditBalance(cls.fetchInitialQuotaofProducer(Producers,Number(value)));
-    
+    setquotaCreditBalance(cls.fetchInitialQuotaofProducer(Producers, Number(value)));
+
   }
 
   async function filterbyquotacreadit(e: React.ChangeEvent<HTMLSelectElement>): Promise<void> {
@@ -200,55 +201,27 @@ console.log(quotaCreditkey)
   }
 
 
-  function Edidintgform(item: any): void {
+  function openEditForm(item: any): void {
     setFormStatus('editing');
     setshowmodel(true);
     console.log(item, 't1');
-    setformoneId(0)
-    const formatDate = (date: any) =>
-      date ? new Date(date).toISOString().split('T')[0] : '';
-
-
-
-  //     setFormData({
-  //   QuotaCreditType: item?.Bc_Quota_Credit_Type + ' - ' + item?.Bc_Description,
-  //   QuantityperWeek: item?.Bc_Quantity_per_Week ?? '',
-  //   Flock: item?.Bc_Flock ?? '',
-  //   ApplicationDate: formatDate(item?.Bc_Application_Date),
-  //   StartDate: formatDate(item?.Bc_Start_Date),
-  //   EndDate: formatDate(item?.Bc_End_Date),
-  //   Description: item?.Bc_Description ?? ''
-  // });
-  setFormData({
-  QuotaCreditType:
-    item?.Bc_Quota_Credit_Type,
-  QuantityperWeek: item?.Bc_Quantity_per_Week,
-  Flock: item?.Bc_Flock,
-  ApplicationDate: formatDate(item?.Bc_Application_Date),
-  StartDate: formatDate(item?.Bc_Start_Date),
-  EndDate: formatDate(item?.Bc_End_Date),
-  Description: item?.Bc_Description ?? ''
-});
-
     setformoneId(0);
-    seteditingform(true);
     setFormData({
-      ...formData,
-      QuotaCreditType: item?.QC_x0020_Subtype + ' - ' + item?.Description,
-      QuantityperWeek: item?.QuantityperWeek,
-      Flock: item?.QuantityperWeek,
-      ApplicationDate: formatDateFromString(item?.ApplicationDate),
-      StartDate: formatDateFromString(item?.StartDate),
-      EndDate: formatDateFromString(item?.EndDate),
-      Description: item?.Description ?? ''
+      QuotaCreditType: item?.Bc_Quota_Credit_Type,
+      QuantityperWeek: item?.Bc_Quantity_per_Week,
+      Flock: item?.Bc_Flock,
+      ApplicationDate: formatDate(item?.Bc_Application_Date),
+      StartDate: formatDate(item?.Bc_Start_Date),
+      EndDate: formatDate(item?.Bc_End_Date),
+      Description: item?.Bc_Description ?? ''
     });
     setformoneId(item?.ID)
   }
 
-  async function deletingitem(item:any){
+  async function deletingitem(item: any) {
   }
 
-  
+
 
 
   return (
@@ -339,22 +312,22 @@ console.log(quotaCreditkey)
             </div>
 
 
-<div className="quota-form-row">
-  <div className="quota-form-group">
-    <label>13 weeks(s) and 0 days(0)</label>
-  </div>
+            <div className="quota-form-row">
+              <div className="quota-form-group">
+                <label>13 weeks(s) and 0 days(0)</label>
+              </div>
 
-  <div className="quota-form-group checkbox-inline">
-    <label>
-      <input
-        type="checkbox"
-        checked={enableEndDate}
-        onChange={(e) => setEnableEndDate(e.target.checked)}
-      />
-      <span>I would like to pick a different Date</span>
-    </label>
-  </div>
-</div>
+              <div className="quota-form-group checkbox-inline">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={enableEndDate}
+                    onChange={(e) => setEnableEndDate(e.target.checked)}
+                  />
+                  <span>I would like to pick a different Date</span>
+                </label>
+              </div>
+            </div>
             <div className="quota-form-group">
               <label>Description <span>*</span></label>
               <textarea
@@ -384,7 +357,7 @@ console.log(quotaCreditkey)
 
       }
 
-     
+
       <div className="quota-form-row">
         <div className="quota-form-group">
           <label>Producers <span>*</span></label>
@@ -426,8 +399,8 @@ console.log(quotaCreditkey)
           <button className="btn-add" onClick={() => {
             setFormStatus('submitting')
             setshowmodel(prev => !prev)
-            
-            }}>Add Transaction</button>
+
+          }}>Add Transaction</button>
         </div>
 
         <div className="table-wrapper">
@@ -457,8 +430,8 @@ console.log(quotaCreditkey)
                     <td>{item?.Bc_Description}</td>
                     <td>
                       <div className="actions">
-                        <span className="delete" onClick={()=> deletingitem(item)}><img src={deleteicon} alt="deleteicon" /></span>
-                        <span className="edit" onClick={() => Edidintgform(item)}><img src={editicon} alt="editicon" /></span>
+                        <span className="delete" onClick={() => deletingitem(item)}><img src={deleteicon} alt="deleteicon" /></span>
+                        <span className="edit" onClick={() => openEditForm(item)}><img src={editicon} alt="editicon" /></span>
                       </div>
                     </td>
                   </tr>
@@ -498,12 +471,12 @@ console.log(quotaCreditkey)
                     <td>{item?.Bc_Transaction_Type}</td>
                     <td>{item?.bc_quantityPerWeek}</td>
                     <td>{item?.bc_quantityPerWeek}</td>
-                    <td>{weeksBetween(item.bc_startDate,item.bc_endDate)}</td>
+                    <td>{weeksBetween(item.bc_startDate, item.bc_endDate)}</td>
                     <td>{item?.bc_quantityPerDay}</td>
-                    <td>{daysBetween(item.bc_startDate,item.bc_endDate)}</td>
+                    <td>{daysBetween(item.bc_startDate, item.bc_endDate)}</td>
                     <td>{item?.bc_flock}</td>
                     <td>{item?.Bc_Date ? formatDateFromString(item.Bc_Date) : ''}</td>
-                    <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate): ''}</td>
+                    <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate) : ''}</td>
                     <td>{item?.bc_endDate ? formatDateFromString(item.bc_endDate) : ''}</td>
                     <td>{item?.field_19}</td>
                     <td>{item?.Bc_Comment}</td>
@@ -519,7 +492,3 @@ console.log(quotaCreditkey)
 }
 
 export default QuotaCredit
-function seteditingform(arg0: boolean) {
-  throw new Error('Function not implemented.');
-}
-

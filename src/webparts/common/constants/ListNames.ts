@@ -13,7 +13,9 @@ export const listNames = {
 };
 
 export const status = {
-   
+   PendingApproval:"Pending Approval",
+Approved:"Approved",
+Declined:"Declined"
 };
 
 export enum EmployeeStatus {
