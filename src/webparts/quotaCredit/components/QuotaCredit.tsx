@@ -45,8 +45,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         "*"
       );
 
-      let quotaCreditdowndata = await api.getListItems(
-        listNames.QuotaCreditType,
+      let quotaCreditdowndata = await api.filterListItems(
+        listNames.QuotaCreditType,"LinkTitle eq 'Usage'",
         'Title'
       );
 
@@ -337,7 +337,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
           <label>Producers <span>*</span></label>
           <select value={producerkey} onChange={(e) => filterbyProducer(e)}>
 
-            <option disabled selected>Select Procedure</option>
+            <option disabled selected>Select Producer</option>
             {Producers?.map((item: any) => {
               return (
                 <option value={item?.ID}>{item?.Producer}</option>
@@ -369,7 +369,6 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         <div className="balance-value">{quotaCreditBalance}</div>
       </div><div className="card">
         <div className="section-header">
-          <h2>Quota Credit Transaction</h2>
           <h2>Quota Credit Transaction</h2>
           <button className="btn-add" onClick={() => {
             setFormStatus('submitting');
