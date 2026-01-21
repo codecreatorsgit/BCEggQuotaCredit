@@ -3,13 +3,10 @@ import type { IQuotaCreditProps } from './IQuotaCreditProps';
 import './style.css'
 import { ApiService } from '../../services/apiservices';
 import { alerts, listNames, status } from '../../common/constants/ListNames';
-// import { ICamlQuery, sp } from '@pnp/sp/presets/all';
 import { TransactionService } from '../../business/transactionservice';
 import { daysBetween, formatDate, formatDateFromString, getCurrentDate, weeksBetween } from '../../common/utils/helperfunctions';
-// import { map } from 'lodash';
 const editicon = require('../assets/edit.png')
 const deleteicon = require('../assets/delete.png')
-
 
 const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [Producers, setProducers]: any = React.useState([]);
@@ -30,64 +27,51 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [TransactionreportTable, setTransactionreportTable]: any = React.useState([]);
   const [producerkey, setproducerkey]: any = React.useState('');
   const [quotaCreditkey, setquotaCreditkey]: any = React.useState('');
-  // const [editingform, seteditingform]: any = React.useState(false);
   const [formoneId, setformoneId]: any = React.useState(0);
   const [quotaCreditBalance, setquotaCreditBalance]: any = React.useState(0);
   const [enableEndDate, setEnableEndDate] = React.useState(false);
   const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('submitting');
 
-
   const api = new ApiService(context)
   const cls = new TransactionService(context)
 
-
+  /* ===================== INIT ===================== */
   React.useEffect(() => {
-
     const produceritems = async () => {
       const user = await api.getCurrentUser();
-      const producerdowndataf = await api.filterListItems(listNames.ProducerInformation, `BCEggAccount/Id eq ${user.Id}`, "*");
+      const producerdowndataf = await api.filterListItems(
+        listNames.ProducerInformation,
+        `BCEggAccount/Id eq ${user.Id}`,
+        "*"
+      );
 
-      console.log(producerdowndataf, 'prd')
-      //     const producerdowndata: ICamlQuery = {
-      //       ViewXml: `
-      //   <View>
-      //     <Query>
-      //       <Where>
-      //         <Includes>
-      //           <FieldRef Name="BCEggAccount" LookupId="TRUE" />
-      //           <Value Type="Integer">${user.Id}</Value>
-      //         </Includes>
-      //       </Where>
-      //     </Query>
-      //   </View>
-      // `
-      //     };
-      //     const producerdowndatafinal = await sp.web.lists
-      //       .getByTitle(listNames.ProducerInformation)
-      //       .getItemsByCAMLQuery(producerdowndata);
+      let quotaCreditdowndata = await api.getListItems(
+        listNames.QuotaCreditType,
+        'Title'
+      );
 
-
-      let quotaCreditdowndata = await api.getListItems(listNames.QuotaCreditType, 'Title');
-      let quotaCreditTypedowndata = await api.filterListItems(listNames.QuotaCreditTypes, "TransactionCategory eq 'Usage'",
-        'Id,Title,Subtype,SubType_x0020__x002d__x0020_Desc');
+      let quotaCreditTypedowndata = await api.filterListItems(
+        listNames.QuotaCreditTypes,
+        "TransactionCategory eq 'Usage'",
+        'Id,Title,Subtype,SubType_x0020__x002d__x0020_Desc'
+      );
 
       setProducers(producerdowndataf);
       setQuotaCredit(quotaCreditdowndata);
       setQuotaCredittype(quotaCreditTypedowndata);
-      //default selected 
-      //setquotaCreditkey(quotaCreditdowndata?.[0]?.Title);
-      console.log(quotaCreditkey)
       setproducerkey(producerdowndataf?.[0]?.ID);
-      let data = await cls.fetchCurrentTransactions(Number(producerdowndataf?.[0]?.ID))
-      let data2 = await cls.fetchHistoricalTransactions(Number(producerdowndataf?.[0]?.ID));
+      console.log(quotaCreditkey)
+
+      const currentData = await cls.fetchCurrentTransactions(Number(producerdowndataf?.[0]?.ID));
+      const historicalData = await cls.fetchHistoricalTransactions(Number(producerdowndataf?.[0]?.ID));
+
       setquotaCreditBalance(cls.fetchInitialQuotaofProducer(producerdowndataf, Number(producerdowndataf?.[0]?.ID)));
-      setTransactionTable(data)
-
-      setTransactionreportTable(data2)
+      setTransactionTable(currentData);
+      setTransactionreportTable(historicalData);
     };
-    produceritems();
 
-  }, [])
+    produceritems();
+  }, []);
 
   const calculateEndDate = (startDate: string) => {
     if (!startDate) return '';
@@ -100,112 +84,104 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     const { name, value } = e.target;
     if (name === 'StartDate') {
       const endDate = calculateEndDate(value);
+      setFormData((prev: any) => ({ ...prev, StartDate: value, EndDate: endDate }));
+    } else {
+      setFormData((prev: any) => ({ ...prev, [name]: value }));
+    }
 
-      setFormData((prev: any) => ({
-        ...prev,
-        StartDate: value,
-        EndDate: endDate
-      }));
-    }
-    else {
-      setFormData((prev: any) => ({
-        ...prev,
-        [name]: value
-      }));
-    }
     if (name === "QuotaCreditType") {
       let qtype = QuotaCredittype?.filter((item: any) => item?.Id === Number(value));
-      console.log(qtype, 'qtype');
       subtype.current = qtype?.[0]?.Title
-
-
     }
   };
 
-  async function updatingform() {
-    await api.updateRecord(formoneId, listNames.FinalQuotaCreditUsageList, {
-      ...formData
+  const validateForm = (): boolean => {
+    const requiredFields = [
+      'QuotaCreditType',
+      'QuantityperWeek',
+      'Flock',
+      'ApplicationDate',
+      'StartDate',
+      'EndDate',
+      'Description'
+    ];
+    const emptyField = requiredFields.find((field) => !formData[field]);
+    if (emptyField) {
+      alert(`${alerts.RequiredFields} ${emptyField}`);
+      return false;
+    }
+    return true;
+  };
+  const buildPayload = () => cls.Formpayload(formData, producerkey, status);
+
+  const resetForm = () => {
+    setFormData({
+      QuotaCreditType: '',
+      QuantityperWeek: '',
+      Flock: '',
+      ApplicationDate: getCurrentDate(),
+      StartDate: '',
+      EndDate: '',
+      Description: ''
     });
-    alert(alerts.SuccessFullySubmited)
-  }
+    setshowmodel(false);
+    setFormStatus('submitting');
+  };
 
   const handleSubmit = async () => {
     try {
-      const requiredFields = [
-        'QuotaCreditType',
-        'QuantityperWeek',
-        'Flock',
-        'ApplicationDate',
-        'StartDate',
-        'EndDate',
-        'Description'
-      ];
+      if (!validateForm()) return;
 
-      const emptyField = requiredFields.find((field: any) => !formData[field]);
-      if (emptyField) {
-        alert(`${alerts.RequiredFields} ${emptyField}`);
-        return;
-      }
-      const payload: any = {
-        Bc_Quota_Credit_Type: formData.QuotaCreditType,
-        Bc_Quantity_per_Week: formData.QuantityperWeek,
-        Bc_Flock: formData.Flock,
-        Bc_Application_Date: formData.ApplicationDate,
-        Bc_Start_Date: formData.StartDate,
-        Bc_End_Date: formData.EndDate,
-        Bc_Description: formData.Description,
-        Bc_producerIDId: Number(producerkey),
-        Bc_applicationStatus: status.PendingApproval
-      };
-      await api.insertRecord(
-        listNames.FinalQuotaCreditUsageList,
-        payload
-      );
+      await api.insertRecord(listNames.FinalQuotaCreditUsageList, buildPayload());
       alert(alerts.SuccessFullySubmited);
-
-      setFormData({
-        QuotaCreditType: '',
-        QuantityperWeek: '',
-        Flock: '',
-        ApplicationDate: '',
-        StartDate: '',
-        EndDate: '',
-        Description: ''
-      });
-      setshowmodel(false);
+      resetForm();
     } catch (error) {
       console.error(error);
       alert(alerts.catcherrors);
     }
   };
 
-  async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
-    setTransactionTable([])
-    let value = e.target.value;
+  const updatingForm = async () => {
+    try {
+      if (!validateForm()) return;
+
+      await api.updateRecord(formoneId, listNames.FinalQuotaCreditUsageList, buildPayload());
+      alert(alerts.SuccessFullySubmited);
+        if (producerkey) {
+      const updatedData = await cls.fetchCurrentTransactions(Number(producerkey));
+      setTransactionTable(updatedData);
+    }
+      resetForm();
+    } catch (error) {
+      console.error(error);
+      alert(alerts.catcherrors);
+    }
+  };
+
+
+    async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
+    setTransactionTable([]);
+    const value = e.target.value;
     setproducerkey(value);
 
-    let _currentData = await cls.fetchCurrentTransactions(Number(value));
-    let _historicalData = await cls.fetchHistoricalTransactions(Number(value));
-    setTransactionreportTable(_historicalData);
+    const _currentData = await cls.fetchCurrentTransactions(Number(value));
+    const _historicalData = await cls.fetchHistoricalTransactions(Number(value));
     setTransactionTable(_currentData);
+    setTransactionreportTable(_historicalData);
     setquotaCreditBalance(cls.fetchInitialQuotaofProducer(Producers, Number(value)));
-
   }
 
   async function filterbyquotacreadit(e: React.ChangeEvent<HTMLSelectElement>): Promise<void> {
-    setquotaCreditkey(e.target.value)
-    setquotaCreditkey('');
-    setTransactionreportTable([])
-    let _historicalData = await cls.fetchHistoricalTransactions(Number(producerkey));
-    setTransactionreportTable(_historicalData)
+    setquotaCreditkey(e.target.value);
+    setTransactionreportTable([]);
+    const _historicalData = await cls.fetchHistoricalTransactions(Number(producerkey));
+    setTransactionreportTable(_historicalData);
   }
-
 
   function openEditForm(item: any): void {
     setFormStatus('editing');
     setshowmodel(true);
-    console.log(item, 't1');
-    setformoneId(0);
+    setformoneId(item?.ID);
     setFormData({
       QuotaCreditType: item?.Bc_Quota_Credit_Type,
       QuantityperWeek: item?.Bc_Quantity_per_Week,
@@ -215,12 +191,12 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       EndDate: formatDate(item?.Bc_End_Date),
       Description: item?.Bc_Description ?? ''
     });
-    setformoneId(item?.ID)
   }
 
   async function deletingitem(item: any) {
+    // await api.deleteRecord(item?.ID,'' );
+    // alert(alerts.Deleterecord)
   }
-
 
 
 
@@ -229,14 +205,11 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       {showmodel &&
         <div className="quota-modal-overlay" id="transactionModal">
           <div className="quota-modal">
-
-            <h2>Add Quota Credit Usage Transaction</h2>
-
+            <h2>{formStatus === 'editing' ? 'Edit Quota Credit Usage Transaction' : 'Add Quota Credit Usage Transaction'}</h2>
             <div className="quota-form-row">
               <div className="quota-form-group">
                 <label>Quota Credit Type <span>*</span></label>
                 <select
-
                   name="QuotaCreditType"
                   value={formData.QuotaCreditType}
                   onChange={handleChange}
@@ -345,7 +318,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
               <button
                 className={`btn-submit ${formStatus === "editing" ? 'updateone' : ''}`}
-                onClick={formStatus === "submitting" ? handleSubmit : updatingform}>
+                onClick={formStatus === "submitting" ? handleSubmit : updatingForm}>
                 {formStatus === "submitting" ? "Submit" : "Save"}
               </button>
 
@@ -396,11 +369,23 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       </div><div className="card">
         <div className="section-header">
           <h2>Quota Credit Transaction</h2>
+          <h2>Quota Credit Transaction</h2>
           <button className="btn-add" onClick={() => {
-            setFormStatus('submitting')
-            setshowmodel(prev => !prev)
+            setFormStatus('submitting');
+            setFormData({
+              QuotaCreditType: '',
+              QuantityperWeek: '',
+              Flock: '',
+              ApplicationDate: getCurrentDate(),
+              StartDate: '',
+              EndDate: '',
+              Description: ''
+            });
+            setshowmodel(prev => !prev);
+          }}>
+            Add Transaction
+          </button>
 
-          }}>Add Transaction</button>
         </div>
 
         <div className="table-wrapper">
