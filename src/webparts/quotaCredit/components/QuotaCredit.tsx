@@ -112,9 +112,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     }
     return true;
   };
-  // const buildPayload = () => cls.Formpayload(formData, producerkey, status);
-  const buildPayload = (): Record<string, any> =>
-  cls.Formpayload(formData, Number(producerkey), status);
+  const buildPayload = cls.Formpayload(formData, producerkey, status);
 
 
   const resetForm = () => {
@@ -135,7 +133,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     try {
       if (!validateForm()) return;
 
-      await api.insertRecord(listNames.FinalQuotaCreditUsageList, buildPayload());
+      await api.insertRecord(listNames.FinalQuotaCreditUsageList, buildPayload);
       alert(alerts.SuccessFullySubmited);
       resetForm();
     } catch (error) {
@@ -148,7 +146,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     try {
       if (!validateForm()) return;
 
-      await api.updateRecord(formoneId, listNames.FinalQuotaCreditUsageList, buildPayload());
+      await api.updateRecord(formoneId, listNames.FinalQuotaCreditUsageList, buildPayload);
       alert(alerts.SuccessFullySubmited);
         if (producerkey) {
       const updatedData = await cls.fetchCurrentTransactions(Number(producerkey));

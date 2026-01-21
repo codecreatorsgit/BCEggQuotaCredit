@@ -18,26 +18,22 @@ private _transactionHistory:any;
   static calculateTotalCredit(transactions: any): number {
     return transactions.reduce((sum: any, t: { amount: any; }) => sum + t.amount, 0);
   }
-public Formpayload(
-  formData: any,
-  producerkey: number,
-  status: any
-): Record<string, any> {
 
-  return {
-    Bc_Quota_Credit_Type: formData.QuotaCreditType,
-    Bc_Quantity_per_Week: formData.QuantityperWeek,
-    Bc_Flock: formData.Flock,
-    Bc_Application_Date: formData.ApplicationDate,
-    Bc_Start_Date: formData.StartDate,
-    Bc_End_Date: formData.EndDate,
-    Bc_Description: formData.Description,
-    Bc_producerIDId: Number(producerkey),
-    Bc_applicationStatus: status.PendingApproval
-  };
-}
+  public Formpayload(formData:any,producerkey:any,status:any){
+   const payload: any = {
+          Bc_Quota_Credit_Type: formData.QuotaCreditType,
+          Bc_Quantity_per_Week: formData.QuantityperWeek,
+          Bc_Flock: formData.Flock,
+          Bc_Application_Date: formData.ApplicationDate,
+          Bc_Start_Date: formData.StartDate,
+          Bc_End_Date: formData.EndDate,
+          Bc_Description: formData.Description,
+          Bc_producerIDId: Number(producerkey),
+          Bc_applicationStatus: status.PendingApproval
+        };
 
-  
+        return payload;
+  }
 
   public  fetchInitialQuotaofProducer(producers:any, producerid:number): number {
     
