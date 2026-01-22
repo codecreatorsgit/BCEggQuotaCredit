@@ -46,7 +46,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       );
 
       let quotaCreditdowndata = await api.filterListItems(
-        listNames.QuotaCreditType,"LinkTitle eq 'Usage'",
+        listNames.QuotaCreditType, "LinkTitle eq 'Usage'",
         'Title'
       );
 
@@ -63,9 +63,9 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       console.log(quotaCreditkey)
 
       const currentData = await cls.fetchCurrentTransactions(Number(producerdowndataf?.[0]?.ID));
-      const historicalData = await cls.fetchHistoricalTransactions(Number(producerdowndataf?.[0]?.ID));
-
-      setquotaCreditBalance(cls.fetchInitialQuotaofProducer(producerdowndataf, Number(producerdowndataf?.[0]?.ID)));
+      const historicalData = await cls.fetchHistoricalUsageTransactions(Number(producerdowndataf?.[0]?.ID));
+      await cls.fetchHistoricalEarnedTransactions(Number(producerdowndataf?.[0]?.ID));
+      setquotaCreditBalance(cls.fetchInitialQuotaofProducer());
       setTransactionTable(currentData);
       setTransactionreportTable(historicalData);
     };
@@ -148,10 +148,10 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
       await api.updateRecord(formoneId, listNames.FinalQuotaCreditUsageList, buildPayload);
       alert(alerts.SuccessFullySubmited);
-        if (producerkey) {
-      const updatedData = await cls.fetchCurrentTransactions(Number(producerkey));
-      setTransactionTable(updatedData);
-    }
+      if (producerkey) {
+        const updatedData = await cls.fetchCurrentTransactions(Number(producerkey));
+        setTransactionTable(updatedData);
+      }
       resetForm();
     } catch (error) {
       console.error(error);
@@ -160,22 +160,23 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   };
 
 
-    async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
+  async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
     setTransactionTable([]);
     const value = e.target.value;
     setproducerkey(value);
 
     const _currentData = await cls.fetchCurrentTransactions(Number(value));
-    const _historicalData = await cls.fetchHistoricalTransactions(Number(value));
+    const _historicalData = await cls.fetchHistoricalUsageTransactions(Number(value));
+    await cls.fetchHistoricalEarnedTransactions(Number(value));
     setTransactionTable(_currentData);
     setTransactionreportTable(_historicalData);
-    setquotaCreditBalance(cls.fetchInitialQuotaofProducer(Producers, Number(value)));
+    setquotaCreditBalance(cls.fetchInitialQuotaofProducer());
   }
 
   async function filterbyquotacreadit(e: React.ChangeEvent<HTMLSelectElement>): Promise<void> {
     setquotaCreditkey(e.target.value);
     setTransactionreportTable([]);
-    const _historicalData = await cls.fetchHistoricalTransactions(Number(producerkey));
+    const _historicalData = await cls.fetchHistoricalUsageTransactions(Number(producerkey));
     setTransactionreportTable(_historicalData);
   }
 
