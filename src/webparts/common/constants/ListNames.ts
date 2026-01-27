@@ -32,7 +32,8 @@ export const alerts = {
     SuccessFullySubmited: "Record added successfully",
     catcherrors: "Error while saving data",
     Deleterecord: "Record Deleted successfully",
-    Notransactions:"Please Add Quota Credit Transaction"
+    Notransactions:"Please Add Quota Credit Transaction",
+    ValidateQuantity:"Quantity must be less than Available in Balance"
 
 
 }

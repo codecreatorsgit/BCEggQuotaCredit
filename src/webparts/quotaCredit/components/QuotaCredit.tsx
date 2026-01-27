@@ -85,7 +85,16 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     if (name === 'StartDate') {
       const endDate = calculateEndDate(value);
       setFormData((prev: any) => ({ ...prev, StartDate: value, EndDate: endDate }));
-    } else {
+    }
+    else if (name === 'QuantityperWeek') {
+      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance);
+      if (result === false) {
+        alert(alerts.ValidateQuantity)
+      } else {
+        setFormData((prev: any) => ({ ...prev, [name]: value }));
+      }
+    }
+    else {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
 
@@ -116,24 +125,20 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
   const handleAllSubmit = async () => {
     try {
-     
+
 
       const conter1 = TransactionTable.filter((tb: any) =>
         tb.counter === '-1'
       );
 
-       if (!conter1 || conter1.length === 0) {
+      if (!conter1 || conter1.length === 0) {
         alert(alerts.Notransactions);
         return;
       }
-
       for (const tb of conter1) {
-          const payload = cls.Formpayload(tb, producerkey, status);
-          await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
-        
+        const payload = cls.Formpayload(tb, producerkey, status);
+        await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
       }
-
-
       alert(alerts.SuccessFullySubmited);
       const currentData = await cls.fetchCurrentTransactions(Number(producerkey));
       console.log(currentData, 'current')
@@ -301,6 +306,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 <input
                   type="date"
                   name="ApplicationDate"
+                  min={getCurrentDate()}
                   value={formData.ApplicationDate}
                   onChange={handleChange}
                 />
@@ -313,6 +319,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 <input
                   type="date"
                   name="StartDate"
+                   min={getCurrentDate()}
                   value={formData.StartDate}
                   onChange={handleChange}
                 />
@@ -323,6 +330,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 <input
                   type="date"
                   name="EndDate"
+                   min={getCurrentDate()}
                   value={formData.EndDate}
                   onChange={handleChange}
                   disabled={!enableEndDate}
