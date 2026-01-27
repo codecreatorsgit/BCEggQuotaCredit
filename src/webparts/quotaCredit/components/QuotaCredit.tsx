@@ -114,33 +114,42 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   };
   const buildPayload = cls.Formpayload(formData, producerkey, status);
 
-const handleAllSubmit = async () => {
-  try {
-    if (!TransactionTable || TransactionTable.length === 0) {
-      alert(alerts.Notransactions);
-      return;
-    }
+  const handleAllSubmit = async () => {
+    try {
+     
 
-    for (const tb of TransactionTable) {
-      if(!tb.counter){
-         alert(alerts.Notransactions);
-         return;
-      }
-      if (tb.counter === '-1') {
-        const payload = cls.Formpayload(tb, producerkey, status);
-        await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
-      }
-    }
+      const conter1 = TransactionTable.filter((tb: any) =>
+        tb.counter === '-1'
+      );
 
-    alert(alerts.SuccessFullySubmited);
+       if (!conter1 || conter1.length === 0) {
+        alert(alerts.Notransactions);
+        return;
+      }
+
+      for (const tb of conter1) {
+          const payload = cls.Formpayload(tb, producerkey, status);
+          await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
+        
+      }
+
+
+      alert(alerts.SuccessFullySubmited);
       const currentData = await cls.fetchCurrentTransactions(Number(producerkey));
-       console.log(currentData,'current')
-    setTransactionTable(currentData);
-  } catch (error) {
-    console.error(error);
-    alert(alerts.catcherrors);
-  }
-};
+      console.log(currentData, 'current')
+
+      const updatedTable = TransactionTable.map((tb: any) =>
+        tb.counter === '-1'
+          ? { ...tb, counter: '-2' }
+          : tb
+      );
+
+      setTransactionTable(updatedTable);
+    } catch (error) {
+      console.error(error);
+      alert(alerts.catcherrors);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -159,10 +168,10 @@ const handleAllSubmit = async () => {
   const handleSubmitDataTable = async () => {
     try {
       if (!validateForm()) return;
-     setTransactionTable([
-      ...TransactionTable,
-      { ...formData, counter: '-1' }
-    ]);
+      setTransactionTable((prev: any) => [
+        ...prev,
+        { ...formData, counter: '-1' }
+      ]);
       // await api.insertRecord(listNames.FinalQuotaCreditUsageList, buildPayload);
       alert(alerts.SuccessFullySubmited);
       resetForm();
@@ -172,10 +181,10 @@ const handleAllSubmit = async () => {
     }
   };
 
-  React.useEffect(()=> {
-    console.log(TransactionTable,'trans')
+  React.useEffect(() => {
+    console.log(TransactionTable, 'trans')
 
-  },[TransactionTable])
+  }, [TransactionTable])
 
   const updatingForm = async () => {
     try {
@@ -395,7 +404,7 @@ const handleAllSubmit = async () => {
         </div>
         <div className="btn-group">
           <button className="btn-cancel">Cancel</button>
-          <button className="btn-submit" onClick={handleAllSubmit }>All Submit</button>
+          <button className="btn-submit" onClick={handleAllSubmit}>Submit</button>
 
         </div>
       </div>
@@ -440,7 +449,7 @@ const handleAllSubmit = async () => {
               </tr>
             </thead>
             <tbody>
-  
+
               {TransactionTable?.map((item: any) => {
                 return (
                   <tr>
@@ -494,9 +503,9 @@ const handleAllSubmit = async () => {
                     <td>{item?.Bc_Transaction_Type}</td>
                     <td>{item?.bc_quantityPerWeek}</td>
                     <td>{item?.bc_quantityPerWeek}</td>
-                    <td>{item.bc_endDate && item.bc_endDate ? weeksBetween(item.bc_startDate, item.bc_endDate) :''}</td>
+                    <td>{item.bc_endDate && item.bc_endDate ? weeksBetween(item.bc_startDate, item.bc_endDate) : ''}</td>
                     <td>{item?.bc_quantityPerDay}</td>
-                    <td>{item.bc_startDate && item.bc_endDate ? daysBetween(item.bc_startDate, item.bc_endDate) :''}</td>
+                    <td>{item.bc_startDate && item.bc_endDate ? daysBetween(item.bc_startDate, item.bc_endDate) : ''}</td>
                     <td>{item?.bc_flock}</td>
                     <td>{item?.Bc_Date ? formatDateFromString(item.Bc_Date) : ''}</td>
                     <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate) : ''}</td>
