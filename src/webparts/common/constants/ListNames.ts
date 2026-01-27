@@ -31,6 +31,8 @@ export const alerts = {
     RequiredFields: "Please fill the required field:",
     SuccessFullySubmited: "Record added successfully",
     catcherrors: "Error while saving data",
-    Deleterecord: "Record Deleted successfully"
+    Deleterecord: "Record Deleted successfully",
+    Notransactions:"Please Add Quota Credit Transaction"
+
 
 }

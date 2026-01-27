@@ -114,6 +114,33 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   };
   const buildPayload = cls.Formpayload(formData, producerkey, status);
 
+const handleAllSubmit = async () => {
+  try {
+    if (!TransactionTable || TransactionTable.length === 0) {
+      alert(alerts.Notransactions);
+      return;
+    }
+
+    for (const tb of TransactionTable) {
+      if(!tb.counter){
+         alert(alerts.Notransactions);
+         return;
+      }
+      if (tb.counter === '-1') {
+        const payload = cls.Formpayload(tb, producerkey, status);
+        await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
+      }
+    }
+
+    alert(alerts.SuccessFullySubmited);
+      const currentData = await cls.fetchCurrentTransactions(Number(producerkey));
+       console.log(currentData,'current')
+    setTransactionTable(currentData);
+  } catch (error) {
+    console.error(error);
+    alert(alerts.catcherrors);
+  }
+};
 
   const resetForm = () => {
     setFormData({
@@ -129,11 +156,14 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     setFormStatus('submitting');
   };
 
-  const handleSubmit = async () => {
+  const handleSubmitDataTable = async () => {
     try {
       if (!validateForm()) return;
-
-      await api.insertRecord(listNames.FinalQuotaCreditUsageList, buildPayload);
+     setTransactionTable([
+      ...TransactionTable,
+      { ...formData, counter: '-1' }
+    ]);
+      // await api.insertRecord(listNames.FinalQuotaCreditUsageList, buildPayload);
       alert(alerts.SuccessFullySubmited);
       resetForm();
     } catch (error) {
@@ -141,6 +171,11 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       alert(alerts.catcherrors);
     }
   };
+
+  React.useEffect(()=> {
+    console.log(TransactionTable,'trans')
+
+  },[TransactionTable])
 
   const updatingForm = async () => {
     try {
@@ -320,7 +355,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
               <button
                 className={`btn-submit ${formStatus === "editing" ? 'updateone' : ''}`}
-                onClick={formStatus === "submitting" ? handleSubmit : updatingForm}>
+                onClick={formStatus === "submitting" ? handleSubmitDataTable : updatingForm}>
                 {formStatus === "submitting" ? "Submit" : "Save"}
               </button>
 
@@ -360,7 +395,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         </div>
         <div className="btn-group">
           <button className="btn-cancel">Cancel</button>
-          <button className="btn-submit">Submit</button>
+          <button className="btn-submit" onClick={handleAllSubmit }>All Submit</button>
+
         </div>
       </div>
 
@@ -404,16 +440,17 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
               </tr>
             </thead>
             <tbody>
+  
               {TransactionTable?.map((item: any) => {
                 return (
                   <tr>
-                    <td>{item?.Bc_Quota_Credit_Type}</td>
-                    <td>{item?.Bc_Quantity_per_Week}</td>
-                    <td>{item?.Bc_Flock}</td>
-                    <td>{item?.Bc_Application_Date ? formatDateFromString(item.Bc_Application_Date) : ''}</td>
-                    <td>{item?.Bc_Start_Date ? formatDateFromString(item.Bc_Start_Date) : ''}</td>
-                    <td>{item?.Bc_End_Date ? formatDateFromString(item.Bc_End_Date) : ''}</td>
-                    <td>{item?.Bc_Description}</td>
+                    <td>{item?.Bc_Quota_Credit_Type ?? item?.QuotaCreditType}</td>
+                    <td>{item?.Bc_Quantity_per_Week ?? item?.QuantityperWeek}</td>
+                    <td>{item?.Bc_Flock ?? item?.Flock}</td>
+                    <td>{item?.Bc_Application_Date ?? item?.ApplicationDate ? formatDateFromString(item.Bc_Application_Date ?? item?.ApplicationDate) : ''}</td>
+                    <td>{item?.Bc_Start_Date ?? item?.StartDate ? formatDateFromString(item.Bc_Start_Date ?? item?.StartDate) : ''}</td>
+                    <td>{item?.Bc_End_Date ?? item?.EndDate ? formatDateFromString(item.Bc_End_Date ?? item?.EndDate) : ''}</td>
+                    <td>{item?.Bc_Description ?? item?.Description}</td>
                     <td>
                       <div className="actions">
                         <span className="delete" onClick={() => deletingitem(item)}><img src={deleteicon} alt="deleteicon" /></span>
@@ -457,9 +494,9 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                     <td>{item?.Bc_Transaction_Type}</td>
                     <td>{item?.bc_quantityPerWeek}</td>
                     <td>{item?.bc_quantityPerWeek}</td>
-                    <td>{weeksBetween(item.bc_startDate, item.bc_endDate)}</td>
+                    <td>{item.bc_endDate && item.bc_endDate ? weeksBetween(item.bc_startDate, item.bc_endDate) :''}</td>
                     <td>{item?.bc_quantityPerDay}</td>
-                    <td>{daysBetween(item.bc_startDate, item.bc_endDate)}</td>
+                    <td>{item.bc_startDate && item.bc_endDate ? daysBetween(item.bc_startDate, item.bc_endDate) :''}</td>
                     <td>{item?.bc_flock}</td>
                     <td>{item?.Bc_Date ? formatDateFromString(item.Bc_Date) : ''}</td>
                     <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate) : ''}</td>
