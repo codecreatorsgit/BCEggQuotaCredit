@@ -34,7 +34,8 @@ export const alerts = {
     Deleterecord: "Record Deleted successfully",
     Notransactions:"Please Add Quota Credit Transaction Entry First",
     allcancel :"All temporary transactions cancelled",
-    ValidateQuantity:"Quantity must be less than Available in Balance"
+    ValidateQuantity:"Quantity must be less than Available in Balance",
+    deleteconfirm: "Are you sure you want to delete this transaction?"
 
 
 }
