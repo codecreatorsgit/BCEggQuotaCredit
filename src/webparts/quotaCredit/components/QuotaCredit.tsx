@@ -86,7 +86,16 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     if (name === 'StartDate') {
       const endDate = calculateEndDate(value);
       setFormData((prev: any) => ({ ...prev, StartDate: value, EndDate: endDate }));
-    } else {
+    }
+    else if (name === 'QuantityperWeek') {
+      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance);
+      if (result === false) {
+        alert(alerts.ValidateQuantity)
+      } else {
+        setFormData((prev: any) => ({ ...prev, [name]: value }));
+      }
+    }
+    else {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
 
@@ -136,14 +145,14 @@ const handleAllCancel = () => {
         alert(alerts.Notransactions);
         return;
       }
-
       for (const tb of conter1) {
         const payload = cls.Formpayload(tb, producerkey, status);
         await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8570e9fff7866df9f10a3daaf4f264566c8ecc89
       }
-
-
       alert(alerts.SuccessFullySubmited);
       const currentData = await cls.fetchCurrentTransactions(Number(producerkey));
       console.log(currentData, 'current')
@@ -362,6 +371,7 @@ const handleAllCancel = () => {
                 <input
                   type="date"
                   name="ApplicationDate"
+                  min={getCurrentDate()}
                   value={formData.ApplicationDate}
                   onChange={handleChange}
                 />
@@ -374,6 +384,7 @@ const handleAllCancel = () => {
                 <input
                   type="date"
                   name="StartDate"
+                   min={getCurrentDate()}
                   value={formData.StartDate}
                   onChange={handleChange}
                 />
@@ -384,6 +395,7 @@ const handleAllCancel = () => {
                 <input
                   type="date"
                   name="EndDate"
+                   min={getCurrentDate()}
                   value={formData.EndDate}
                   onChange={handleChange}
                   disabled={!enableEndDate}
