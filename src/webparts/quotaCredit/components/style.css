@@ -186,9 +186,10 @@ filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(360deg) brightness(95%
     margin-bottom: 8px;
 }
 
-.quota-form-group label span{
+.different-date{
     color: #323130 !important;
 }
+
 
 /* ===== INPUT / SELECT ===== */
 .quota-form-group input,
