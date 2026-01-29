@@ -148,10 +148,7 @@ const handleAllCancel = () => {
       for (const tb of conter1) {
         const payload = cls.Formpayload(tb, producerkey, status);
         await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
-<<<<<<< HEAD
 
-=======
->>>>>>> 8570e9fff7866df9f10a3daaf4f264566c8ecc89
       }
       alert(alerts.SuccessFullySubmited);
       const currentData = await cls.fetchCurrentTransactions(Number(producerkey));
