@@ -12,8 +12,8 @@ export class TransactionService {
     this.api = new ApiService(context)
 
   }
-  static validateQuota(quota: number, availableCredit: number): boolean {
-    return quota <= availableCredit;
+  static validateQuota(quota: number, availableCredit: number,approvalPendingCredit:number): boolean {
+    return quota <= (availableCredit-approvalPendingCredit);
   }
 
   static calculateTotalCredit(transactions: any): number {

@@ -33,7 +33,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [quotaCreditBalance, setquotaCreditBalance]: any = React.useState(0);
   const [enableEndDate, setEnableEndDate] = React.useState(false);
   const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('submitting');
-  const [tempdataUdapte, settempdataUdapte] = React.useState('')
+  const [tempdataUdapte, settempdataUdapte] = React.useState('');
+  const [approvalPendingQuotaCredit, setApprovalPendingQuotaCredit] = React.useState(0);
 
   const api = new ApiService(context)
   const cls = new TransactionService(context)
@@ -86,7 +87,13 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
     produceritems();
   }, []);
-
+  React.useEffect(() => {
+const total = TransactionTable.reduce(
+  (sum: number, row: { Bc_Quantity_per_Week: number; }) => sum + Number(row.Bc_Quantity_per_Week),
+  0
+);
+setApprovalPendingQuotaCredit(total);
+}, [TransactionTable]);
   const calculateEndDate = (startDate: string) => {
     if (!startDate) return '';
     const date = new Date(startDate);
@@ -102,7 +109,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       const endDate = calculateEndDate(value);
       setFormData((prev: any) => ({ ...prev, Bc_Start_Date: value, Bc_End_Date: endDate }));
     } else if (name === 'Bc_Quantity_per_Week') {
-      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance);
+      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance,approvalPendingQuotaCredit);
       if (!result) {
         alert(alerts.ValidateQuantity)
       } else {
@@ -131,8 +138,6 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     }
     return true;
   };
-
-
 
   const openAddTransactionForm = () => {
     setFormStatus('submitting');
@@ -489,8 +494,9 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         <div className="balance-title">Total Quota Credit Usage Balance</div>
         <div className="balance-label">Quota Credit Balance</div>
         <div className="balance-value">{quotaCreditBalance}</div>
+        <div className="balance-label">Approval Pending Quota Credit</div>
+        <div className="balance-value">{approvalPendingQuotaCredit}</div>
       </div>
-
       {/* Quota Credit Transaction Table */}
       <div className="card">
         <div className="section-header">
@@ -498,9 +504,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
           <button className="btn-add" onClick={openAddTransactionForm}>
             Add Transaction
           </button>
-
         </div>
-
         <div className="table-wrapper">
           <table>
             <thead>
