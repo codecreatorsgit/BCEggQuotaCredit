@@ -288,9 +288,9 @@ const handleAllCancel = () => {
       QuotaCreditType: item?.Bc_Quota_Credit_Type ?? item?.QuotaCreditType ?? formData?.QuotaCreditType,
       QuantityperWeek: item?.Bc_Quantity_per_Week ?? item?.QuantityperWeek ?? formData?.QuantityperWeek,
       Flock: item?.Bc_Flock ?? item?.Flock ?? formData?.Flock,
-      ApplicationDate: item?.Bc_Application_Date ?? item?.ApplicationDate ?? formatDateFromString(formData?.ApplicationDate),
-      StartDate: item?.Bc_Start_Date ?? item?.StartDate ?? formatDateFromString(formData?.StartDate),
-      EndDate: item?.Bc_End_Date ?? item?.EndDate ?? formatDateFromString(formData?.EndDate),
+      ApplicationDate: formatDate(item?.Bc_Application_Date),
+      StartDate: formatDate(item?.Bc_Start_Date),
+      EndDate: formatDate(item?.Bc_End_Date),
       Description: item?.Bc_Description ?? item?.Description ?? formData?.Description
     });
   }
