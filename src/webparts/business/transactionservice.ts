@@ -22,13 +22,13 @@ export class TransactionService {
 
   public Formpayload(formData: any, producerkey: any, status: any) {
     const payload: any = {
-      Bc_Quota_Credit_Type: formData.QuotaCreditType,
-      Bc_Quantity_per_Week: formData.QuantityperWeek,
-      Bc_Flock: formData.Flock,
-      Bc_Application_Date: formData.ApplicationDate,
-      Bc_Start_Date: formData.StartDate,
-      Bc_End_Date: formData.EndDate,
-      Bc_Description: formData.Description,
+      Bc_Quota_Credit_Type: formData.Bc_Quota_Credit_Type,
+      Bc_Quantity_per_Week: formData.Bc_Quantity_per_Week,
+      Bc_Flock: formData.Bc_Flock,
+      Bc_Application_Date: formData.Bc_Application_Date,
+      Bc_Start_Date: formData.Bc_Start_Date,
+      Bc_End_Date: formData.Bc_End_Date,
+      Bc_Description: formData.Bc_Description,
       Bc_producerIDId: Number(producerkey),
       Bc_applicationStatus: status.PendingApproval
     };

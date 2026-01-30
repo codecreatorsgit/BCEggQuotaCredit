@@ -34,7 +34,18 @@ export const alerts = {
     Deleterecord: "Record Deleted successfully",
     Notransactions:"Please Add Quota Credit Transaction Entry First",
     allcancel :"All temporary transactions cancelled",
-    ValidateQuantity:"Quantity must be less than Available in Balance"
+    ValidateQuantity:"Quantity must be less than Available in Balance",
+    deleteconfirm: "Are you sure you want to delete this transaction?"
 
 
 }
+
+export const fieldNamesMap: Record<string, string> = {
+    Bc_Quota_Credit_Type: 'Quota Credit Type',
+    Bc_Quantity_per_Week: 'Quantity per Week',
+    Bc_Flock: 'Flock',
+    Bc_Application_Date: 'Application Date',
+    Bc_Start_Date: 'Start Date',
+    Bc_End_Date: 'End Date',
+    Bc_Description: 'Description'
+  };
