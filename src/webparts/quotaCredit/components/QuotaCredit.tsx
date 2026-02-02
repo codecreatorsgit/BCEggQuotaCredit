@@ -22,7 +22,14 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     Bc_Start_Date: '',
     Bc_End_Date: '',
     Bc_Description: '',
-    Bc_checkbox: false
+    Bc_checkbox: false,
+    Bc_TotalQuantity:0,
+    Bc_QuantityPerDay:0,
+    Bc_TotalNoofDays:0,
+    Bc_NoofWeeks:0,
+    
+
+
   });
 
   // let subtype = React.useRef('');
@@ -128,7 +135,6 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   };
 
   
-
   const validateForm = (): boolean => {
     const requiredFields = [
       'Bc_Quota_Credit_Type',
