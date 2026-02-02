@@ -32,7 +32,7 @@ export class TransactionService {
  public Formpayload(formData: any, producerkey: any, status: any) {
   let totalDays = formData.Bc_Start_Date && formData.Bc_End_Date ? daysBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
   let quantityperday = TransactionService.calculateQuantityPerDay(Number(formData.Bc_Quantity_per_Week));
-  let totalQuantity = quantityperday * totalDays;
+  let totalQuantity = TransactionService.calculateTotalQuantity(quantityperday,totalDays);
   let numberofDays = totalDays;
   let noofweeks = formData.Bc_Start_Date && formData.Bc_End_Date ? weeksBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
 
