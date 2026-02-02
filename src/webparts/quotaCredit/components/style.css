@@ -264,3 +264,23 @@ button.btn-cancel {
 input[disabled] {
     background: #f4f4f4;
 }
+.balance-grid {
+    display: flex;
+    gap: 40px;
+}
+
+.balance-item {
+    flex: 1;            /* teeno equal width */
+}
+
+.balance-label {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.balance-value {
+    margin-top: 10px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+    width: auto;        /* old 450px issue fix */
+}

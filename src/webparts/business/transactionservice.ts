@@ -30,7 +30,8 @@ export class TransactionService {
       Bc_End_Date: formData.Bc_End_Date,
       Bc_Description: formData.Bc_Description,
       Bc_producerIDId: Number(producerkey),
-      Bc_applicationStatus: status.PendingApproval
+      Bc_applicationStatus: status.PendingApproval,
+      Bc_checkbox:formData.Bc_checkbox
     };
 
     return payload;

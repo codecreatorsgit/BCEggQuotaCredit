@@ -21,7 +21,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     Bc_Application_Date: getCurrentDate(),
     Bc_Start_Date: '',
     Bc_End_Date: '',
-    Bc_Description: ''
+    Bc_Description: '',
+    Bc_checkbox: false
   });
 
   // let subtype = React.useRef('');
@@ -88,28 +89,34 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     produceritems();
   }, []);
   React.useEffect(() => {
-const total = TransactionTable.reduce(
-  (sum: number, row: { Bc_Quantity_per_Week: number; }) => sum + Number(row.Bc_Quantity_per_Week),
-  0
-);
-setApprovalPendingQuotaCredit(total);
-}, [TransactionTable]);
+    const total = TransactionTable.reduce(
+      (sum: number, row: { Bc_Quantity_per_Week: number; }) => sum + Number(row.Bc_Quantity_per_Week),
+      0
+    );
+    setApprovalPendingQuotaCredit(total);
+  }, [TransactionTable]);
   const calculateEndDate = (startDate: string) => {
     if (!startDate) return '';
     const date = new Date(startDate);
     date.setDate(date.getDate() + 91);
     return formatDate(date)
   };
+  const actualAllowedCredit =
+    quotaCreditBalance - approvalPendingQuotaCredit;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     console.log('Form Change:', name, value);
-
+    if(name === "Bc_Quantity_per_Week"){
+      if(Number(value) < 1){
+        return;
+      }
+    }
     if (name === 'Bc_Start_Date') {
       const endDate = calculateEndDate(value);
       setFormData((prev: any) => ({ ...prev, Bc_Start_Date: value, Bc_End_Date: endDate }));
     } else if (name === 'Bc_Quantity_per_Week') {
-      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance,approvalPendingQuotaCredit);
+      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, approvalPendingQuotaCredit);
       if (!result) {
         alert(alerts.ValidateQuantity)
       } else {
@@ -120,6 +127,8 @@ setApprovalPendingQuotaCredit(total);
     }
   };
 
+  
+
   const validateForm = (): boolean => {
     const requiredFields = [
       'Bc_Quota_Credit_Type',
@@ -129,6 +138,7 @@ setApprovalPendingQuotaCredit(total);
       'Bc_Start_Date',
       'Bc_End_Date',
       'Bc_Description'
+
     ];
 
     const emptyField = requiredFields.find((field) => !formData[field]);
@@ -148,7 +158,8 @@ setApprovalPendingQuotaCredit(total);
       Bc_Application_Date: getCurrentDate(),
       Bc_Start_Date: '',
       Bc_End_Date: '',
-      Bc_Description: ''
+      Bc_Description: '',
+      Bc_checkbox: false
     });
     setshowmodel(true);
   };
@@ -202,7 +213,8 @@ setApprovalPendingQuotaCredit(total);
       Bc_Application_Date: getCurrentDate(),
       Bc_Start_Date: '',
       Bc_End_Date: '',
-      Bc_Description: ''
+      Bc_Description: '',
+      Bc_checkbox: false
     });
     setshowmodel(false);
     setFormStatus('submitting');
@@ -221,7 +233,7 @@ setApprovalPendingQuotaCredit(total);
 
       setTransactionTable((prev: any) => [
         ...prev,
-        { ...formData, id: `${negatedMaxId}` }
+        { ...formData, Bc_checkbox: enableEndDate, id: `${negatedMaxId}` }
       ]);
       console.log('Temporary Transaction Added:', formData);
       alert(alerts.SuccessFullySubmited);
@@ -252,7 +264,16 @@ setApprovalPendingQuotaCredit(total);
 
         const savedRows = await cls.fetchCurrentTransactions(Number(producerkey));
         const tempRows = TransactionTable.filter((tb: any) => tb.id < 0);
-        setTransactionTable([...savedRows, ...tempRows]);
+
+
+        const normalizedSavedRows = savedRows.map((item: any) => {
+          const existing = TransactionTable.find((tb: any) => tb.ID === item.ID && tb?.ID == formoneId);
+          return {
+            ...item,
+            Bc_checkbox: existing !== undefined && Object.keys(existing).length > 0 && formData.Bc_checkbox ? true : false
+          };
+        });
+        setTransactionTable([...normalizedSavedRows, ...tempRows]);
         resetForm();
       }
     } catch (error) {
@@ -285,30 +306,35 @@ setApprovalPendingQuotaCredit(total);
     console.log('Filtered by Quota Credit:', _historicalData);
     setTransactionreportTable(_historicalData);
   }
-  function openEditForm(item: any, id: any): void {
-    setFormStatus('editing');
-    setshowmodel(true);
-    setformoneId(item?.ID ?? item.id);
-    settempdataUdapte(`${id}`);
 
-    setFormData({
-      Bc_Quota_Credit_Type: item?.Bc_Quota_Credit_Type ?? '',
-      Bc_Quantity_per_Week: item?.Bc_Quantity_per_Week ?? '',
-      Bc_Flock: item?.Bc_Flock ?? '',
-      Bc_Application_Date: formatDate(item.Bc_Application_Date),
 
-      Bc_Start_Date: item?.Bc_Start_Date
-        ? formatDate(item.Bc_Start_Date)
-        : '',
-      Bc_End_Date: item?.Bc_End_Date
-        ? formatDate(item.Bc_End_Date)
-        : '',
-      Bc_Description: item?.Bc_Description ?? ''
-    });
+function openEditForm(item: any, id: any): void {
+  setFormStatus('editing');
+  setshowmodel(true);
+  setformoneId(item?.ID ?? item.id);
+  settempdataUdapte(`${id}`);
 
-    setEnableEndDate(!!item?.Bc_End_Date);
-    console.log('Editing Form Data:', item);
-  }
+  const existing = TransactionTable.some((tb: any) => tb?.ID === item?.ID && item?.Bc_checkbox == true);
+  const temp = TransactionTable.find((tb: any) => tb?.id === id && item?.Bc_checkbox == true);
+
+  setFormData({
+    Bc_Quota_Credit_Type: item?.Bc_Quota_Credit_Type ?? '',
+    Bc_Quantity_per_Week: item?.Bc_Quantity_per_Week ?? '',
+    Bc_Flock: item?.Bc_Flock ?? '',
+    Bc_Application_Date: formatDate(item.Bc_Application_Date),
+    Bc_Start_Date: item?.Bc_Start_Date ? formatDate(item.Bc_Start_Date) : '',
+    Bc_End_Date: item?.Bc_End_Date ? formatDate(item.Bc_End_Date) : '',
+    Bc_Description: item?.Bc_Description ?? '',
+    Bc_checkbox: temp ?? existing
+  });
+
+  // Checkbox ko UI me enable/disable ke liye
+  setEnableEndDate(temp?.Bc_checkbox ?? existing?.Bc_checkbox ?? false);
+
+  console.log('Editing Form Data:', item);
+}
+
+
 
 
   async function deletingitem(item: any, id: any) {
@@ -430,11 +456,25 @@ setApprovalPendingQuotaCredit(total);
 
               <div className="quota-form-group checkbox-inline">
                 <label>
-                  <input
+                  {/* <input
                     type="checkbox"
                     checked={enableEndDate}
                     onChange={(e) => setEnableEndDate(e.target.checked)}
+                  /> */}
+
+                  <input
+                    type="checkbox"
+                    checked={formData.Bc_checkbox}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setEnableEndDate(checked);
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        Bc_checkbox: checked
+                      }));
+                    }}
                   />
+
                   <span className="different-date">I would like to pick a different Date</span>
                 </label>
               </div>
@@ -489,14 +529,27 @@ setApprovalPendingQuotaCredit(total);
         </div>
       </div>
 
-      {/* Quota Balance Card */}
       <div className="card">
         <div className="balance-title">Total Quota Credit Usage Balance</div>
-        <div className="balance-label">Quota Credit Balance</div>
-        <div className="balance-value">{quotaCreditBalance}</div>
-        <div className="balance-label">Approval Pending Quota Credit</div>
-        <div className="balance-value">{approvalPendingQuotaCredit}</div>
+
+        <div className="balance-grid">
+          <div className="balance-item">
+            <div className="balance-label">Quota Credit Balance</div>
+            <div className="balance-value">{quotaCreditBalance}</div>
+          </div>
+
+          <div className="balance-item">
+            <div className="balance-label">Approval Pending Quota Credit</div>
+            <div className="balance-value">{approvalPendingQuotaCredit}</div>
+          </div>
+
+          <div className="balance-item">
+            <div className="balance-label">Actual Allowed Credit</div>
+            <div className="balance-value">{actualAllowedCredit}</div>
+          </div>
+        </div>
       </div>
+
       {/* Quota Credit Transaction Table */}
       <div className="card">
         <div className="section-header">
