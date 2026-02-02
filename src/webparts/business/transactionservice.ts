@@ -20,6 +20,14 @@ export class TransactionService {
     return transactions.reduce((sum: any, t: { amount: any; }) => sum + t.amount, 0);
   }
 
+  static calculateQuantityPerDay(quantityPerWeek:number): number {
+    return Math.floor(quantityPerWeek/7);
+  }
+
+   static calculateTotalQuantity(quantityPerDay:number,totalDays:number): number {
+    return quantityPerDay*totalDays;
+  }
+
   public Formpayload(formData: any, producerkey: any, status: any) {
     const payload: any = {
       Bc_Quota_Credit_Type: formData.Bc_Quota_Credit_Type,
