@@ -9,7 +9,8 @@ export const listNames = {
     QuotaCreditType: "Quota Credit Type",
     QuotaCreditTypes: "Quota Credit Types",
     FinalQuotaCreditUsageList: "Quota Credit Requests",
-    QuotaCreditTransactions: "Detail List Quota Transaction"
+    QuotaCreditTransactions: "Quota Credit Usage Transaction" ,
+    QuotaCreditEarnTransactions: "Quota Credit Earn Transaction"
 };
 
 export const status = {

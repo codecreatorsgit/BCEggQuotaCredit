@@ -89,8 +89,8 @@ export class TransactionService {
 
    public async fetchHistoricalEarnedTransactions(producerid: number): Promise<any> {
     const quotEarnedTransactions =
-      await this.api.filterListItems(listNames.QuotaCreditTransactions,
-        `Bc_Transaction_Type eq 'Earned' and bc_producerId eq '${producerid}'`, "*");
+      await this.api.filterListItems(listNames.QuotaCreditEarnTransactions,
+        `Bc_Transaction_Type eq 'Earned' and bc_producerId eq '${producerid}' and bc_isExpired eq 'false' and bc_isCreditUsed eq 'false'`, "*");
     this._transactionEarnedHistory = quotEarnedTransactions;
     return quotEarnedTransactions;
   }
