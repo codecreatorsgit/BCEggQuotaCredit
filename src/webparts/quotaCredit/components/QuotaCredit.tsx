@@ -43,6 +43,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [formStatus, setFormStatus] = React.useState<'editing' | 'submitting'>('submitting');
   const [tempdataUdapte, settempdataUdapte] = React.useState('');
   const [approvalPendingQuotaCredit, setApprovalPendingQuotaCredit] = React.useState(0);
+  const [isSubmittingAll, setIsSubmittingAll] = React.useState(false);
 
   const api = new ApiService(context)
   const cls = new TransactionService(context)
@@ -122,7 +123,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     if (name === 'Bc_Start_Date') {
       const endDate = calculateEndDate(value);
       setFormData((prev: any) => ({ ...prev, Bc_Start_Date: value, Bc_End_Date: endDate }));
-    } else if (name === 'Bc_Quantity_per_Week') {
+    } 
+    else if (name === 'Bc_Quantity_per_Week') {
       let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, approvalPendingQuotaCredit);
       if (!result) {
         alert(alerts.ValidateQuantity)
@@ -174,17 +176,15 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const buildPayload = cls.Formpayload(formData, producerkey, status);
   console.log('Payload to submit:', buildPayload);
 
-  const handleAllCancel = () => {
-    const hasTempData = TransactionTable.some((tb: any) => tb.id < 0);
-    console.log('Cancel Temp Data:', hasTempData);
-    if (hasTempData) {
-      setTransactionTable((prev: any[]) => prev.filter((tb) => tb.id > 0));
-      alert(alerts.allcancel);
-    }
-  };
+const handleAllCancel = () => {
+  window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
+};
+
 
   const handleAllSubmit = async () => {
+    if (isSubmittingAll) return;
     try {
+      setIsSubmittingAll(true)
       const tempItems = TransactionTable.filter((tb: any) => tb.id < 0);
       console.log('Items to Submit:', tempItems);
       if (!tempItems.length) {
@@ -205,6 +205,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         tb.id < 0 ? { ...tb, counter: '-2' } : tb
       );
       setTransactionTable(updatedTable);
+      setIsSubmittingAll(false)
+      window.location.reload();
     } catch (error) {
       console.error('Submit Error:', error);
       alert(alerts.catcherrors);
@@ -224,6 +226,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     });
     setshowmodel(false);
     setFormStatus('submitting');
+    setIsSubmittingAll(false)
     console.log('Form Reset');
   };
 
