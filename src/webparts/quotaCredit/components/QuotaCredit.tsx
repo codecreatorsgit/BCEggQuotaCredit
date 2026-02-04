@@ -70,7 +70,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
       let quotaCreditTypedowndata = await api.filterListItems(
         listNames.QuotaCreditTypes,
-        "TransactionCategory eq 'Usage'",
+        "TransactionCategory eq 'Usage' or TransactionCategory eq 'Trade'",
         'Id,Title,Subtype,SubType_x0020__x002d__x0020_Desc'
       );
       console.log('Quota Credit Type Data:', quotaCreditTypedowndata);
