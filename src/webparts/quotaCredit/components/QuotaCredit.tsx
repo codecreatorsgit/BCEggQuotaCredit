@@ -23,11 +23,11 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     Bc_End_Date: '',
     Bc_Description: '',
     Bc_checkbox: false,
-    Bc_TotalQuantity:0,
-    Bc_QuantityPerDay:0,
-    Bc_TotalNoofDays:0,
-    Bc_NoofWeeks:0,
-    
+    Bc_TotalQuantity: 0,
+    Bc_QuantityPerDay: 0,
+    Bc_TotalNoofDays: 0,
+    Bc_NoofWeeks: 0,
+
 
 
   });
@@ -115,28 +115,33 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     console.log('Form Change:', name, value);
-    if(name === "Bc_Quantity_per_Week"){
-      if(Number(value) < 1){
-        return;
-      }
-    }
     if (name === 'Bc_Start_Date') {
       const endDate = calculateEndDate(value);
       setFormData((prev: any) => ({ ...prev, Bc_Start_Date: value, Bc_End_Date: endDate }));
-    } 
+    }
     else if (name === 'Bc_Quantity_per_Week') {
-      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, approvalPendingQuotaCredit);
-      if (!result) {
-        alert(alerts.ValidateQuantity)
-      } else {
+      // if (Number(value) > 1) {
+        let calculatedApprovalPendingQuotaCredit = approvalPendingQuotaCredit
+        if (formStatus == 'editing') {
+          calculatedApprovalPendingQuotaCredit = calculatedApprovalPendingQuotaCredit - Number(formData.Bc_Quantity_per_Week);
+        }
+        let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, calculatedApprovalPendingQuotaCredit);
+        if (!result) {
+          alert(alerts.ValidateQuantity)
+        } else {
+          setFormData((prev: any) => ({ ...prev, [name]: value }));
+        }
+      // }else{
+      //   alert(alerts.QuantityGreaterthanZero)
+      // }
+    }
+       else {
         setFormData((prev: any) => ({ ...prev, [name]: value }));
       }
-    } else {
-      setFormData((prev: any) => ({ ...prev, [name]: value }));
-    }
+      
   };
 
-  
+
   const validateForm = (): boolean => {
     const requiredFields = [
       'Bc_Quota_Credit_Type',
@@ -176,9 +181,9 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const buildPayload = cls.Formpayload(formData, producerkey, status);
   console.log('Payload to submit:', buildPayload);
 
-const handleAllCancel = () => {
-  window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
-};
+  const handleAllCancel = () => {
+    window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
+  };
 
 
   const handleAllSubmit = async () => {
@@ -317,31 +322,31 @@ const handleAllCancel = () => {
   }
 
 
-function openEditForm(item: any, id: any): void {
-  setFormStatus('editing');
-  setshowmodel(true);
-  setformoneId(item?.ID ?? item.id);
-  settempdataUdapte(`${id}`);
+  function openEditForm(item: any, id: any): void {
+    setFormStatus('editing');
+    setshowmodel(true);
+    setformoneId(item?.ID ?? item.id);
+    settempdataUdapte(`${id}`);
 
-  const existing = TransactionTable.some((tb: any) => tb?.ID === item?.ID && item?.Bc_checkbox == true);
-  const temp = TransactionTable.find((tb: any) => tb?.id === id && item?.Bc_checkbox == true);
+    const existing = TransactionTable.some((tb: any) => tb?.ID === item?.ID && item?.Bc_checkbox == true);
+    const temp = TransactionTable.find((tb: any) => tb?.id === id && item?.Bc_checkbox == true);
 
-  setFormData({
-    Bc_Quota_Credit_Type: item?.Bc_Quota_Credit_Type ?? '',
-    Bc_Quantity_per_Week: item?.Bc_Quantity_per_Week ?? '',
-    Bc_Flock: item?.Bc_Flock ?? '',
-    Bc_Application_Date: formatDate(item.Bc_Application_Date),
-    Bc_Start_Date: item?.Bc_Start_Date ? formatDate(item.Bc_Start_Date) : '',
-    Bc_End_Date: item?.Bc_End_Date ? formatDate(item.Bc_End_Date) : '',
-    Bc_Description: item?.Bc_Description ?? '',
-    Bc_checkbox: temp ?? existing
-  });
+    setFormData({
+      Bc_Quota_Credit_Type: item?.Bc_Quota_Credit_Type ?? '',
+      Bc_Quantity_per_Week: item?.Bc_Quantity_per_Week ?? '',
+      Bc_Flock: item?.Bc_Flock ?? '',
+      Bc_Application_Date: formatDate(item.Bc_Application_Date),
+      Bc_Start_Date: item?.Bc_Start_Date ? formatDate(item.Bc_Start_Date) : '',
+      Bc_End_Date: item?.Bc_End_Date ? formatDate(item.Bc_End_Date) : '',
+      Bc_Description: item?.Bc_Description ?? '',
+      Bc_checkbox: temp ?? existing
+    });
 
-  // Checkbox ko UI me enable/disable ke liye
-  setEnableEndDate(temp?.Bc_checkbox ?? existing?.Bc_checkbox ?? false);
+    // Checkbox ko UI me enable/disable ke liye
+    setEnableEndDate(temp?.Bc_checkbox ?? existing?.Bc_checkbox ?? false);
 
-  console.log('Editing Form Data:', item);
-}
+    console.log('Editing Form Data:', item);
+  }
 
 
 
@@ -405,6 +410,7 @@ function openEditForm(item: any, id: any): void {
                   value={formData.Bc_Quantity_per_Week}
                   onChange={handleChange}
                   placeholder="Enter"
+                  min={1}
                 />
               </div>
             </div>

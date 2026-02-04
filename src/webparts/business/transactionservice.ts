@@ -81,7 +81,7 @@ export class TransactionService {
   // neecy table kle  // `ID eq 1`,"*")
   public async fetchHistoricalUsageTransactions(producerid: number): Promise<any> {
     const quotUsageTransactions =
-      await this.api.filterListItems(listNames.QuotaCreditEarnTransactions,
+      await this.api.filterListItems(listNames.QuotaCreditTransactions,
         `Bc_Transaction_Type eq 'Usage' and bc_producerId eq '${producerid}'`, "*");
     this._transactionUsageHistory = quotUsageTransactions;
     return quotUsageTransactions;
