@@ -13,9 +13,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [QuotaCredit, setQuotaCredit]: any = React.useState([]);
   const [QuotaCredittype, setQuotaCredittype]: any = React.useState([]);
   const [showmodel, setshowmodel] = React.useState(false);
-  const [qcType, setqcType] = React.useState('')
+  const [toProducer, setToProducer] = React.useState('')
   const [transferProducer, settransferProducer] = React.useState([])
-  console.log(qcType);
 
   const [formData, setFormData] = React.useState<any>({
     Bc_Quota_Credit_Type: '',
@@ -30,11 +29,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     Bc_QuantityPerDay: 0,
     Bc_TotalNoofDays: 0,
     Bc_NoofWeeks: 0,
-    Bc_Transfer_To_Producer:''
-
-
-
-
+    Bc_Transfer_To_Producer: ''
   });
 
   // let subtype = React.useRef('');
@@ -50,9 +45,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [approvalPendingQuotaCredit, setApprovalPendingQuotaCredit] = React.useState(0);
   const [isSubmittingAll, setIsSubmittingAll] = React.useState(false);
 
-  const api = new ApiService(context)
-  const cls = new TransactionService(context)
-
+  const api = React.useMemo(() => new ApiService(context), [context]);
+  const cls = React.useMemo(() => new TransactionService(context), [context]);
   /* ===================== INIT ===================== */
   React.useEffect(() => {
     const produceritems = async () => {
@@ -130,34 +124,25 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     if (name === 'Bc_Start_Date') {
       const endDate = calculateEndDate(value);
       setFormData((prev: any) => ({ ...prev, Bc_Start_Date: value, Bc_End_Date: endDate }));
-      return;
     }
-
-    // else if (name === 'Bc_Quantity_per_Week') {
-    //   let calculatedApprovalPendingQuotaCredit = approvalPendingQuotaCredit
-    //   if (formStatus == 'editing') {
-    //     calculatedApprovalPendingQuotaCredit = calculatedApprovalPendingQuotaCredit - Number(formData.Bc_Quantity_per_Week);
-    //   }
-    //   let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, calculatedApprovalPendingQuotaCredit);
-    //   if (!result) {
-    //     alert(alerts.ValidateQuantity)
-    //   } else {
-    //     setFormData((prev: any) => ({ ...prev, [name]: value }));
-    //   }
-  
-    // }
-    // else {
-    //   setFormData((prev: any) => ({ ...prev, [name]: value }));
-    // }
-    
     else if (name === "Bc_Quota_Credit_Type" && value == "20 - Quota Credit Trade") {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
-      return
-    }else{
+    }
+    else if (name === 'Bc_Quantity_per_Week') {
+      let calculatedApprovalPendingQuotaCredit = approvalPendingQuotaCredit
+      if (formStatus == 'editing') {
+        calculatedApprovalPendingQuotaCredit = calculatedApprovalPendingQuotaCredit - Number(formData.Bc_Quantity_per_Week);
+      }
+      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, calculatedApprovalPendingQuotaCredit);
+      if (!result) {
+        alert(alerts.ValidateQuantity)
+      } else {
+        setFormData((prev: any) => ({ ...prev, [name]: value }));
+      }
+    }
+    else {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
-  
-
   };
 
 
@@ -170,7 +155,6 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       'Bc_Start_Date',
       'Bc_End_Date',
       'Bc_Description'
-
     ];
 
     const emptyField = requiredFields.find((field) => !formData[field]);
@@ -196,14 +180,11 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     setshowmodel(true);
   };
 
-
-
-
   const handleAllCancel = () => {
     window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
   };
 
-  let buildPayload = cls.Formpayload(formData,producerkey,status)
+  let buildPayload = cls.Formpayload(formData, producerkey, status)
 
   const handleAllSubmit = async () => {
     if (isSubmittingAll) return;
@@ -217,17 +198,19 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       }
       for (const tb of tempItems) {
         if (tb?.Bc_Quota_Credit_Type == "20 - Quota Credit Trade") {
-          // if(tb?.Bc_Quota_Credit_Type) delete tb?.Bc_Quota_Credit_Type;
-          const payloadEarn = cls.Formpayload(tb,producerkey, qcType, status,'Earn');
-          await api.insertRecord(listNames.QuotaCreditEarnTransactions, payloadEarn);
-          const payloadUsage =  cls.Formpayload(tb,producerkey, qcType, status,'Usage');
-          await api.insertRecord(listNames.QuotaCreditTransactions, payloadUsage);
-        
-        }else{
-          
-        const payload = cls.Formpayload(tb, producerkey, status);
-        console.log('Submitting Item Payload:', payload);
-        await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
+          const payloadEarn = cls.FormTradepayload(tb, producerkey, status, 'Earn');
+          const earnid = await api.insertRecord(listNames.QuotaCreditEarnTransactions, payloadEarn);
+
+          const payloadUsage = cls.FormTradepayload(tb, producerkey, status, 'Usage');
+          const usageid = await api.insertRecord(listNames.QuotaCreditTransactions, payloadUsage);
+          await api.insertRecord(listNames.EarnedUsageQuotaCreditMappings, {
+            bc_earnedQuotaCreditId: earnid, bc_usageQuotaCreditId: usageid,
+            bc_quantityRemaining: Number(quotaCreditBalance) - Number(tb.Bc_Quantity_per_Week)
+          });
+        } else {
+          const payload = cls.Formpayload(tb, producerkey, status);
+          console.log('Submitting Item Payload:', payload);
+          await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
         }
       }
       alert(alerts.SuccessFullySubmited);
@@ -325,8 +308,10 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     }
   };
 
-  function handleChangeQCtype(e:React.ChangeEvent<HTMLSelectElement>){
-   setqcType(e.target.value)
+  function handleChangeToProducer(e: React.ChangeEvent<HTMLSelectElement>) {
+    const { name, value } = e.target;
+    setToProducer(e.target.value)
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   }
 
   async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -496,25 +481,25 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 />
               </div>
             </div>
-{formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade" && 
-  <div className="quota-form-row">
-    <div className="quota-form-group">
-      <label>Transfer To Producer <span>*</span></label>
-      <select
-        name="Bc_Transfer_To_Producer"
-        value={qcType}
-        onChange={(e)=> handleChangeQCtype(e)}
-      >
-        <option value="" disabled>
-          Transfer To Producer
-        </option>
-        {transferProducer.map((item: any) => (
-          <option value={item?.ID}>{item?.Producer}</option>
-        ))}
-      </select>
-    </div>
-  </div>
-}
+            {formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade" &&
+              <div className="quota-form-row">
+                <div className="quota-form-group">
+                  <label>Transfer To Producer <span>*</span></label>
+                  <select
+                    name="Bc_Transfer_To_Producer"
+                    value={toProducer}
+                    onChange={(e) => handleChangeToProducer(e)}
+                  >
+                    <option value="" disabled>
+                      Transfer To Producer
+                    </option>
+                    {transferProducer.map((item: any) => (
+                      <option value={item?.ID}>{item?.Producer}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            }
 
             {/* {formData?.Bc_Transfer_To_Producer === "20 - Quota Credit Trade" &&
               <div className="quota-form-row">
@@ -714,19 +699,19 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 return (
                   <tr>
                     <td>{item?.Id}</td>
-                    <td>{item?.Bc_Transaction_Type}</td>
+                    <td>{item?.bc_QuotaCreditType}</td>
                     <td>{item?.bc_quantityPerWeek}</td>
                     <td>{item?.bc_quantityPerWeek}</td>
                     <td>{item.bc_endDate && item.bc_endDate ? weeksBetween(item.bc_startDate, item.bc_endDate) : ''}</td>
                     <td>{item?.bc_quantityPerDay}</td>
                     <td>{item.bc_startDate && item.bc_endDate ? daysBetween(item.bc_startDate, item.bc_endDate) : ''}</td>
                     <td>{item?.bc_flock}</td>
-                    <td>{item?.Bc_Date ? formatDateFromString(item.Bc_Date) : ''}</td>
+                    <td>{item?.bc_ApplicationDate ? formatDateFromString(item.bc_ApplicationDate) : ''}</td>
                     <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate) : ''}</td>
                     <td>{item?.bc_endDate ? formatDateFromString(item.bc_endDate) : ''}</td>
-                    <td>{item?.field_19}</td>
+                    <td>{item?.bc_isExpired}</td>
                     <td>{item?.Bc_Comment}</td>
-                    <td>{item?.field_10}</td>
+                    <td>{item?.bc_isCreditUsed}</td>
                   </tr>
                 )
               })}

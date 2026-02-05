@@ -13,88 +13,93 @@ export class TransactionService {
     this.api = new ApiService(context)
 
   }
-  static validateQuota(quota: number, availableCredit: number,approvalPendingCredit:number): boolean {
-    return quota <= (availableCredit-approvalPendingCredit);
+  static validateQuota(quota: number, availableCredit: number, approvalPendingCredit: number): boolean {
+    return quota <= (availableCredit - approvalPendingCredit);
   }
 
   static calculateTotalCredit(transactions: any): number {
     return transactions.reduce((sum: any, t: { amount: any; }) => sum + t.amount, 0);
   }
-  static calculateQuantityPerDay(Bc_Quantity_per_Week:number): number {
-    return Math.floor(Bc_Quantity_per_Week/7);
+  static calculateQuantityPerDay(Bc_Quantity_per_Week: number): number {
+    return Math.floor(Bc_Quantity_per_Week / 7);
   }
 
-   static calculateTotalQuantity(Bc_QuantityPerDay:number,Bc_TotalNoofDays:number): number {
-    return Bc_QuantityPerDay*Bc_TotalNoofDays;
+  static calculateTotalQuantity(Bc_QuantityPerDay: number, Bc_TotalNoofDays: number): number {
+    return Bc_QuantityPerDay * Bc_TotalNoofDays;
   }
 
-  
- public Formpayload(formData: any, producerkey: any, status: any,qcTyp?:any,list?:any) {
-  let totalDays = formData.Bc_Start_Date && formData.Bc_End_Date ? daysBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
-  let quantityperday = TransactionService.calculateQuantityPerDay(Number(formData.Bc_Quantity_per_Week));
-  let totalQuantity = TransactionService.calculateTotalQuantity(quantityperday,totalDays);
-  let numberofDays = totalDays;
-  let noofweeks = formData.Bc_Start_Date && formData.Bc_End_Date ? weeksBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
 
-  let payload:any = '';
+  public Formpayload(formData: any, producerkey: any, status: any, list?: any) {
+    let totalDays = formData.Bc_Start_Date && formData.Bc_End_Date ? daysBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
+    let quantityperday = TransactionService.calculateQuantityPerDay(Number(formData.Bc_Quantity_per_Week));
+    let totalQuantity = TransactionService.calculateTotalQuantity(quantityperday, totalDays);
+    let numberofDays = totalDays;
+    let noofweeks = formData.Bc_Start_Date && formData.Bc_End_Date ? weeksBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
 
-  if(formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade" ){
-payload  = {
-    bc_QuotaCreditType: formData.Bc_Quota_Credit_Type,
-    bc_quantityPerWeek: formData.Bc_Quantity_per_Week,
-    bc_flock: formData.Bc_Flock,
-    bc_ApplicationDate: formData.Bc_Application_Date,
-    bc_startDate: formData.Bc_Start_Date,
-    bc_endDate: formData.Bc_End_Date,
-    Bc_Comment: formData.Bc_Description,
-    bc_producerId:list == 'Earn' ?  Number(qcTyp) : Number(producerkey),
-    Bc_checkbox: formData.Bc_checkbox,
-    bc_quantityPerDay: quantityperday,
+    let payload: any = '';
+    payload = {
+      Bc_Quota_Credit_Type: formData.Bc_Quota_Credit_Type,
+      Bc_Quantity_per_Week: formData.Bc_Quantity_per_Week,
+      Bc_Flock: formData.Bc_Flock,
+      Bc_Application_Date: formData.Bc_Application_Date,
+      Bc_Start_Date: formData.Bc_Start_Date,
+      Bc_End_Date: formData.Bc_End_Date,
+      Bc_Description: formData.Bc_Description,
+      Bc_producerIDId: Number(producerkey),
+      Bc_applicationStatus: status.PendingApproval,
+      Bc_checkbox: formData.Bc_checkbox,
+      Bc_TotalQuantity: totalQuantity,
+      Bc_QuantityPerDay: quantityperday,
+      Bc_TotalNoofDays: numberofDays,
+      Bc_NoofWeeks: noofweeks
+    };
 
-    // Bc_applicationStatus: status.PendingApproval,
-    // Bc_TotalQuantity: totalQuantity,
-    // Bc_TotalNoofDays: numberofDays,
-    // Bc_NoofWeeks: noofweeks
-  };
+    return payload;
   }
-  else {
-payload  = {
-    Bc_Quota_Credit_Type: formData.Bc_Quota_Credit_Type,
-    Bc_Quantity_per_Week: formData.Bc_Quantity_per_Week,
-    Bc_Flock: formData.Bc_Flock,
-    Bc_Application_Date: formData.Bc_Application_Date,
-    Bc_Start_Date: formData.Bc_Start_Date,
-    Bc_End_Date: formData.Bc_End_Date,
-    Bc_Description: formData.Bc_Description,
-    Bc_producerIDId: Number(producerkey),
-    Bc_applicationStatus: status.PendingApproval,
-    Bc_checkbox: formData.Bc_checkbox,
-    Bc_TotalQuantity: totalQuantity,
-    Bc_QuantityPerDay: quantityperday,
-    Bc_TotalNoofDays: numberofDays,
-    Bc_NoofWeeks: noofweeks
-  };
+
+  public FormTradepayload(formData: any, producerkey: any, status: any, list?: any) {
+    let totalDays = formData.Bc_Start_Date && formData.Bc_End_Date ? daysBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
+    let quantityperday = TransactionService.calculateQuantityPerDay(Number(formData.Bc_Quantity_per_Week));
+    let totalQuantity = TransactionService.calculateTotalQuantity(quantityperday, totalDays);
+    let numberofDays = totalDays;
+    let noofweeks = formData.Bc_Start_Date && formData.Bc_End_Date ? weeksBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
+
+    let payload: any = '';
+
+    if (formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade") {
+      payload = {
+        bc_QuotaCreditType: formData.Bc_Quota_Credit_Type,
+        bc_quantityPerWeek: formData.Bc_Quantity_per_Week,
+        bc_flock: formData.Bc_Flock,
+        bc_ApplicationDate: formData.Bc_Application_Date,
+        bc_startDate: formData.Bc_Start_Date,
+        bc_endDate: formData.Bc_End_Date,
+        Bc_Comment: formData.Bc_Description,
+        bc_producerId: list == 'Earn' ? formData.Bc_Transfer_To_Producer : Number(producerkey),
+        Bc_checkbox: formData.Bc_checkbox,
+        bc_quantityPerDay: quantityperday,
+        Bc_TotalQuantity: totalQuantity,
+        Bc_TotalNoofDays: numberofDays,
+        Bc_NoofWeeks: noofweeks
+      };
+      if (list == 'Earn') {
+        payload.Bc_Date = this.getOldestEearnedransaction().Bc_Date;
+      }
+    }
+    return payload;
   }
- 
-//  bc_quantityPerWeek usage
-// bc_quantityPerWeek earn
-
-  return payload;
-}
-
-
 
   public fetchInitialQuotaofProducer(): number {
 
-    const totalUsageQuantity= this._transactionUsageHistory.reduce((sum: any, item: { bc_quantityPerWeek: any; }) => {
+    const totalUsageQuantity = this._transactionUsageHistory.reduce((sum: any, item: { bc_quantityPerWeek: any; }) => {
       return sum + (item.bc_quantityPerWeek || 0);
     }, 0);
 
-    const totalEarnedQuantity= this._transactionEarnedHistory.reduce((sum: any, item: { bc_quantityPerWeek: any; }) => {
+    const totalEarnedQuantity = this._transactionEarnedHistory.reduce((sum: any, item: { bc_quantityPerWeek: any; }) => {
       return sum + (item.bc_quantityPerWeek || 0);
     }, 0);
 
-    return totalEarnedQuantity-totalUsageQuantity;
+    return totalEarnedQuantity - totalUsageQuantity;
   }
 
   // oper table kle
@@ -109,16 +114,29 @@ payload  = {
   public async fetchHistoricalUsageTransactions(producerid: number): Promise<any> {
     const quotUsageTransactions =
       await this.api.filterListItems(listNames.QuotaCreditTransactions,
-        `Bc_Transaction_Type eq 'Usage' and bc_producerId eq '${producerid}'`, "*");
+        `bc_producerId eq '${producerid}'`, "*");
     this._transactionUsageHistory = quotUsageTransactions;
     return quotUsageTransactions;
   }
 
-   public async fetchHistoricalEarnedTransactions(producerid: number): Promise<any> {
-    const quotEarnedTransactions =
+  public async fetchHistoricalEarnedTransactions(producerid: number): Promise<any> {
+    const quotaEarnedTransactions =
       await this.api.filterListItems(listNames.QuotaCreditEarnTransactions,
-        `Bc_Transaction_Type eq 'Earned' and bc_producerId eq '${producerid}' and bc_isExpired eq 'false' and bc_isCreditUsed eq 'false'`, "*");
-    this._transactionEarnedHistory = quotEarnedTransactions;
-    return quotEarnedTransactions;
+        `bc_producerId eq '${producerid}' and bc_isExpired eq 'false' and bc_isCreditUsed eq 'false'`, "*");
+    this._transactionEarnedHistory = quotaEarnedTransactions;
+    return quotaEarnedTransactions;
+  }
+
+  public getOldestEearnedransaction(): any {
+
+    if (!this._transactionEarnedHistory || this._transactionEarnedHistory.length === 0) return null;
+
+    return this._transactionEarnedHistory.reduce((oldest: any, current: any) => {
+      const oldestDate = new Date(oldest["Created"]);
+      const currentDate = new Date(current["Created"]);
+
+      return currentDate < oldestDate ? current : oldest;
+    });
+
   }
 }
