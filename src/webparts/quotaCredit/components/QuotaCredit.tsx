@@ -13,6 +13,9 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [QuotaCredit, setQuotaCredit]: any = React.useState([]);
   const [QuotaCredittype, setQuotaCredittype]: any = React.useState([]);
   const [showmodel, setshowmodel] = React.useState(false);
+  const [qcType, setqcType] = React.useState('')
+  const [transferProducer, settransferProducer] = React.useState([])
+  console.log(qcType);
 
   const [formData, setFormData] = React.useState<any>({
     Bc_Quota_Credit_Type: '',
@@ -27,6 +30,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     Bc_QuantityPerDay: 0,
     Bc_TotalNoofDays: 0,
     Bc_NoofWeeks: 0,
+    Bc_Transfer_To_Producer:''
+
 
 
 
@@ -59,6 +64,13 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         `BCEggAccount/Id eq ${user.Id}`,
         "*"
       );
+      const producertransfredropdown: any = await api.getListItemsWithExpand(
+        listNames.ProducerInformation,
+        `*,BCEggAccount/Id,BCEggAccount/Title`,
+        "BCEggAccount"
+      );
+      console.log(producertransfredropdown)
+      settransferProducer(producertransfredropdown)
       console.log('Producer Data:', producerdowndataf);
       console.log(quotaCreditkey)
 
@@ -118,27 +130,34 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     if (name === 'Bc_Start_Date') {
       const endDate = calculateEndDate(value);
       setFormData((prev: any) => ({ ...prev, Bc_Start_Date: value, Bc_End_Date: endDate }));
+      return;
     }
-    else if (name === 'Bc_Quantity_per_Week') {
-      // if (Number(value) > 1) {
-        let calculatedApprovalPendingQuotaCredit = approvalPendingQuotaCredit
-        if (formStatus == 'editing') {
-          calculatedApprovalPendingQuotaCredit = calculatedApprovalPendingQuotaCredit - Number(formData.Bc_Quantity_per_Week);
-        }
-        let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, calculatedApprovalPendingQuotaCredit);
-        if (!result) {
-          alert(alerts.ValidateQuantity)
-        } else {
-          setFormData((prev: any) => ({ ...prev, [name]: value }));
-        }
-      // }else{
-      //   alert(alerts.QuantityGreaterthanZero)
-      // }
+
+    // else if (name === 'Bc_Quantity_per_Week') {
+    //   let calculatedApprovalPendingQuotaCredit = approvalPendingQuotaCredit
+    //   if (formStatus == 'editing') {
+    //     calculatedApprovalPendingQuotaCredit = calculatedApprovalPendingQuotaCredit - Number(formData.Bc_Quantity_per_Week);
+    //   }
+    //   let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, calculatedApprovalPendingQuotaCredit);
+    //   if (!result) {
+    //     alert(alerts.ValidateQuantity)
+    //   } else {
+    //     setFormData((prev: any) => ({ ...prev, [name]: value }));
+    //   }
+  
+    // }
+    // else {
+    //   setFormData((prev: any) => ({ ...prev, [name]: value }));
+    // }
+    
+    else if (name === "Bc_Quota_Credit_Type" && value == "20 - Quota Credit Trade") {
+      setFormData((prev: any) => ({ ...prev, [name]: value }));
+      return
+    }else{
+      setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
-       else {
-        setFormData((prev: any) => ({ ...prev, [name]: value }));
-      }
-      
+  
+
   };
 
 
@@ -178,13 +197,13 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   };
 
 
-  const buildPayload = cls.Formpayload(formData, producerkey, status);
-  console.log('Payload to submit:', buildPayload);
+
 
   const handleAllCancel = () => {
     window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
   };
 
+  let buildPayload = cls.Formpayload(formData,producerkey,status)
 
   const handleAllSubmit = async () => {
     if (isSubmittingAll) return;
@@ -197,9 +216,19 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
         return;
       }
       for (const tb of tempItems) {
+        if (tb?.Bc_Quota_Credit_Type == "20 - Quota Credit Trade") {
+          // if(tb?.Bc_Quota_Credit_Type) delete tb?.Bc_Quota_Credit_Type;
+          const payloadEarn = cls.Formpayload(tb,producerkey, qcType, status,'Earn');
+          await api.insertRecord(listNames.QuotaCreditEarnTransactions, payloadEarn);
+          const payloadUsage =  cls.Formpayload(tb,producerkey, qcType, status,'Usage');
+          await api.insertRecord(listNames.QuotaCreditTransactions, payloadUsage);
+        
+        }else{
+          
         const payload = cls.Formpayload(tb, producerkey, status);
         console.log('Submitting Item Payload:', payload);
         await api.insertRecord(listNames.FinalQuotaCreditUsageList, payload);
+        }
       }
       alert(alerts.SuccessFullySubmited);
 
@@ -211,7 +240,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       );
       setTransactionTable(updatedTable);
       setIsSubmittingAll(false)
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error('Submit Error:', error);
       alert(alerts.catcherrors);
@@ -295,6 +324,10 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       alert(alerts.catcherrors);
     }
   };
+
+  function handleChangeQCtype(e:React.ChangeEvent<HTMLSelectElement>){
+   setqcType(e.target.value)
+  }
 
   async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
     setTransactionTable([]);
@@ -463,6 +496,45 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 />
               </div>
             </div>
+{formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade" && 
+  <div className="quota-form-row">
+    <div className="quota-form-group">
+      <label>Transfer To Producer <span>*</span></label>
+      <select
+        name="Bc_Transfer_To_Producer"
+        value={qcType}
+        onChange={(e)=> handleChangeQCtype(e)}
+      >
+        <option value="" disabled>
+          Transfer To Producer
+        </option>
+        {transferProducer.map((item: any) => (
+          <option value={item?.ID}>{item?.Producer}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+}
+
+            {/* {formData?.Bc_Transfer_To_Producer === "20 - Quota Credit Trade" &&
+              <div className="quota-form-row">
+                <div className="quota-form-group">
+                  <label>Transfer To Producer <span>*</span></label>
+
+                  <select
+                    name="Bc_Transfer_To_Producer"
+                    value={qcType}
+                    onChange={(e)=> handleChangeQCtype(e)}>
+                    <option value="" disabled>
+                      Transfer To Producer
+                    </option>
+                    {transferProducer.map((item: any) => (
+                      <option value={item?.ID}>{item?.Producer}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            } */}
 
             <div className="quota-form-row">
               <div className="quota-form-group">

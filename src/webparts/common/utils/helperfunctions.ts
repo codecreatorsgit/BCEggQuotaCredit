@@ -132,5 +132,5 @@ export function daysBetween(
 
   const msPerDay = 24 * 60 * 60 * 1000;
   const diffMs = Math.abs(d2.getTime() - d1.getTime());
-  return Math.floor(diffMs / msPerDay);
+  return Math.round(diffMs / msPerDay);
 }

@@ -29,14 +29,36 @@ export class TransactionService {
   }
 
   
- public Formpayload(formData: any, producerkey: any, status: any) {
+ public Formpayload(formData: any, producerkey: any, status: any,qcTyp?:any,list?:any) {
   let totalDays = formData.Bc_Start_Date && formData.Bc_End_Date ? daysBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
   let quantityperday = TransactionService.calculateQuantityPerDay(Number(formData.Bc_Quantity_per_Week));
   let totalQuantity = TransactionService.calculateTotalQuantity(quantityperday,totalDays);
   let numberofDays = totalDays;
   let noofweeks = formData.Bc_Start_Date && formData.Bc_End_Date ? weeksBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
 
-  const payload: any = {
+  let payload:any = '';
+
+  if(formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade" ){
+payload  = {
+    bc_QuotaCreditType: formData.Bc_Quota_Credit_Type,
+    bc_quantityPerWeek: formData.Bc_Quantity_per_Week,
+    bc_flock: formData.Bc_Flock,
+    bc_ApplicationDate: formData.Bc_Application_Date,
+    bc_startDate: formData.Bc_Start_Date,
+    bc_endDate: formData.Bc_End_Date,
+    Bc_Comment: formData.Bc_Description,
+    bc_producerId:list == 'Earn' ?  Number(qcTyp) : Number(producerkey),
+    Bc_checkbox: formData.Bc_checkbox,
+    bc_quantityPerDay: quantityperday,
+
+    // Bc_applicationStatus: status.PendingApproval,
+    // Bc_TotalQuantity: totalQuantity,
+    // Bc_TotalNoofDays: numberofDays,
+    // Bc_NoofWeeks: noofweeks
+  };
+  }
+  else {
+payload  = {
     Bc_Quota_Credit_Type: formData.Bc_Quota_Credit_Type,
     Bc_Quantity_per_Week: formData.Bc_Quantity_per_Week,
     Bc_Flock: formData.Bc_Flock,
@@ -52,9 +74,14 @@ export class TransactionService {
     Bc_TotalNoofDays: numberofDays,
     Bc_NoofWeeks: noofweeks
   };
+  }
+ 
+//  bc_quantityPerWeek usage
+// bc_quantityPerWeek earn
 
   return payload;
 }
+
 
 
   public fetchInitialQuotaofProducer(): number {
