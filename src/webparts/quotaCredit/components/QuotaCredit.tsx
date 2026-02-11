@@ -198,10 +198,10 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       }
       for (const tb of tempItems) {
         if (tb?.Bc_Quota_Credit_Type == "20 - Quota Credit Trade") {
-          const payloadEarn = cls.FormTradepayload(tb, producerkey, status, 'Earn');
+          const payloadEarn = cls.FormTradepayloadEarn(tb);
           const earnid = await api.insertRecord(listNames.QuotaCreditEarnTransactions, payloadEarn);
 
-          const payloadUsage = cls.FormTradepayload(tb, producerkey, status, 'Usage');
+          const payloadUsage = cls.FormTradepayloadUsage(tb, producerkey);
           const usageid = await api.insertRecord(listNames.QuotaCreditTransactions, payloadUsage);
           await api.insertRecord(listNames.EarnedUsageQuotaCreditMappings, {
             bc_earnedQuotaCreditId: earnid, bc_usageQuotaCreditId: usageid,
