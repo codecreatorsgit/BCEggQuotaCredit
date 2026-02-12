@@ -25,7 +25,7 @@ export class ApiService {
 
   public async getListItemsWithExpand(listName: string, selectColumns: string, expand: string): Promise<any[]> {
     try {
-      const items = await sp.web.lists.getByTitle(listName).items.select(selectColumns).expand(expand).get();
+      const items = await sp.web.lists.getByTitle(listName).items.select(selectColumns).expand(expand).top(500).get();
       return items;
     }
     catch (error) {

@@ -147,7 +147,7 @@ export class TransactionService {
   public async fetchHistoricalEarnedTransactions(producerid: number): Promise<any> {
     const quotaEarnedTransactions =
       await this.api.filterListItems(listNames.QuotaCreditEarnTransactions,
-        `ProducerId eq '${producerid}'`, "*");// and bc_isExpired eq 'false' and bc_isCreditUsed eq 'false'
+        `ProducerId eq '${producerid}' and bc_isExpired ne true and bc_isCreditUsed ne true`, "*"); 
     this._transactionEarnedHistory = quotaEarnedTransactions;
     return quotaEarnedTransactions;
   }

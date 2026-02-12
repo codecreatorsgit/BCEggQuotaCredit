@@ -689,9 +689,9 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 <th>Application Date</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Expiry Notified</th>
+                {/* <th>Expiry Notified</th> */}
                 <th>Description</th>
-                <th>Transaction Complete Flag</th>
+                {/* <th>Transaction Complete Flag</th> */}
               </tr>
             </thead>
             <tbody>
@@ -708,10 +708,8 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                     <td>{item?.bc_flock}</td>
                     <td>{item?.bc_ApplicationDate ? formatDateFromString(item.bc_ApplicationDate) : ''}</td>
                     <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate) : ''}</td>
-                    <td>{item?.bc_endDate ? formatDateFromString(item.bc_endDate) : ''}</td>
-                    <td>{item?.bc_isExpired}</td>
+                    <td>{item?.bc_endDate ? formatDateFromString(item.bc_endDate) : ''}</td>              
                     <td>{item?.Bc_Comment}</td>
-                    <td>{item?.bc_isCreditUsed}</td>
                   </tr>
                 )
               })}
