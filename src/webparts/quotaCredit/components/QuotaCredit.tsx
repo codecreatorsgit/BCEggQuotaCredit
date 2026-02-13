@@ -481,6 +481,36 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 />
               </div>
             </div>
+                  <div className="quota-form-row">
+              <div className="quota-form-group">
+                <label>13 weeks(s) and 0 days(0)</label>
+              </div>
+
+              <div className="quota-form-group checkbox-inline">
+                <label>
+                  {/* <input
+                    type="checkbox"
+                    checked={enableEndDate}
+                    onChange={(e) => setEnableEndDate(e.target.checked)}
+                  /> */}
+
+                  <input
+                    type="checkbox"
+                    checked={formData.Bc_checkbox}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setEnableEndDate(checked);
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        Bc_checkbox: checked
+                      }));
+                    }}
+                  />
+
+                  <span className="different-date">I would like to pick a different Date</span>
+                </label>
+              </div>
+            </div>
             {formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade" &&
               <div className="quota-form-row">
                 <div className="quota-form-group">
@@ -521,36 +551,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
               </div>
             } */}
 
-            <div className="quota-form-row">
-              <div className="quota-form-group">
-                <label>13 weeks(s) and 0 days(0)</label>
-              </div>
-
-              <div className="quota-form-group checkbox-inline">
-                <label>
-                  {/* <input
-                    type="checkbox"
-                    checked={enableEndDate}
-                    onChange={(e) => setEnableEndDate(e.target.checked)}
-                  /> */}
-
-                  <input
-                    type="checkbox"
-                    checked={formData.Bc_checkbox}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setEnableEndDate(checked);
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        Bc_checkbox: checked
-                      }));
-                    }}
-                  />
-
-                  <span className="different-date">I would like to pick a different Date</span>
-                </label>
-              </div>
-            </div>
+      
 
             <div className="quota-form-group">
               <label>Description <span>*</span></label>
