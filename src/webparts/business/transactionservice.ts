@@ -17,6 +17,12 @@ export class TransactionService {
     return quota <= (availableCredit - approvalPendingCredit);
   }
 
+  static validateQuotaWithDays(quota: number, availableCredit: number, approvalPendingCredit: number,totalDays:number): boolean {
+    let quantityPerDay= this.calculateQuantityPerDay(quota);
+    let totalQuantity=quantityPerDay*totalDays;
+    return totalQuantity <= (availableCredit - approvalPendingCredit);
+  }
+
   static calculateTotalCredit(transactions: any): number {
     return transactions.reduce((sum: any, t: { amount: any; }) => sum + t.amount, 0);
   }
@@ -58,9 +64,7 @@ export class TransactionService {
   }
 
   public FormTradepayloadUsage(formData: any, producerkey: any) {
-    let totalDays = formData.Bc_Start_Date && formData.Bc_End_Date ? daysBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
-    let quantityperday = TransactionService.calculateQuantityPerDay(Number(formData.Bc_Quantity_per_Week));
-    let totalQuantity = TransactionService.calculateTotalQuantity(quantityperday, totalDays);
+    let { totalDays, quantityperday, totalQuantity } = this.GetTotalQuantity(formData);
     let numberofDays = totalDays;
     let noofweeks = formData.Bc_Start_Date && formData.Bc_End_Date ? weeksBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
 
@@ -84,6 +88,13 @@ export class TransactionService {
       };
     }
     return payload;
+  }
+
+  public GetTotalQuantity(formData: any) {
+    let totalDays = formData.Bc_Start_Date && formData.Bc_End_Date ? daysBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
+    let quantityperday = TransactionService.calculateQuantityPerDay(Number(formData.Bc_Quantity_per_Week));
+    let totalQuantity = TransactionService.calculateTotalQuantity(quantityperday, totalDays);
+    return { totalDays, quantityperday, totalQuantity };
   }
 
   public FormTradepayloadEarn(formData: any) {

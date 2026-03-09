@@ -104,7 +104,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   }, []);
   React.useEffect(() => {
     const total = TransactionTable.reduce(
-      (sum: number, row: { Bc_Quantity_per_Week: number; }) => sum + Number(row.Bc_Quantity_per_Week),
+      (sum: number, row: { Bc_TotalQuantity: number; }) => sum + Number(row.Bc_TotalQuantity),
       0
     );
     setApprovalPendingQuotaCredit(total);
@@ -128,18 +128,12 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     else if (name === "Bc_Quota_Credit_Type" && value == "20 - Quota Credit Trade") {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
-    else if (name === 'Bc_Quantity_per_Week') {
-      let calculatedApprovalPendingQuotaCredit = approvalPendingQuotaCredit
-      if (formStatus == 'editing') {
-        calculatedApprovalPendingQuotaCredit = calculatedApprovalPendingQuotaCredit - Number(formData.Bc_Quantity_per_Week);
-      }
-      let result = TransactionService.validateQuota(Number(value), quotaCreditBalance, calculatedApprovalPendingQuotaCredit);
-      if (!result) {
-        alert(alerts.ValidateQuantity)
-      } else {
-        setFormData((prev: any) => ({ ...prev, [name]: value }));
-      }
-    }
+    // else if (name === 'Bc_Quantity_per_Week') {
+
+    //   setFormData((prev: any) => ({ ...prev, [name]: value }));
+    //   setFormData((prev: any) => ({ ...prev, ['Bc_TotalQuantity']: value }));
+
+    // }
     else {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
@@ -160,6 +154,17 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     const emptyField = requiredFields.find((field) => !formData[field]);
     if (emptyField) {
       alert(`${alerts.RequiredFields} ${fieldNamesMap[emptyField]}`);
+      return false;
+    }
+    let calculatedApprovalPendingQuotaCredit = approvalPendingQuotaCredit
+    if (formStatus == 'editing') {
+      calculatedApprovalPendingQuotaCredit = calculatedApprovalPendingQuotaCredit - Number(formData.Bc_TotalQuantity);
+    }
+    let totalDays = daysBetween(formData['Bc_Start_Date'], formData['Bc_End_Date']);
+    let result = TransactionService.validateQuotaWithDays(Number(formData['Bc_Quantity_per_Week']), quotaCreditBalance,
+      calculatedApprovalPendingQuotaCredit, totalDays);
+    if (!result) {
+      alert(alerts.ValidateQuantity);
       return false;
     }
     return true;
@@ -256,10 +261,10 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       ).length;
 
       const negatedMaxId = -(negativeIdCount + 1);
-
+      let totalQuantity = cls.GetTotalQuantity(formData).totalQuantity;
       setTransactionTable((prev: any) => [
         ...prev,
-        { ...formData, Bc_checkbox: enableEndDate, id: `${negatedMaxId}` }
+        { ...formData, Bc_checkbox: enableEndDate, id: `${negatedMaxId}`, Bc_TotalQuantity: totalQuantity }
       ]);
       console.log('Temporary Transaction Added:', formData);
       alert(alerts.SuccessFullySubmited);
@@ -276,8 +281,9 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
       console.log('Updating Form:', formData);
 
       if (Number(formoneId) < 0) {
+        let totalQuantity = cls.GetTotalQuantity(formData).totalQuantity;
         const updatedTable = TransactionTable.map((tb: any) =>
-          tb.id === tempdataUdapte ? { ...tb, ...formData } : tb
+          tb.id === tempdataUdapte ? { ...tb, ...formData, Bc_TotalQuantity: totalQuantity } : tb
         );
         setTransactionTable(updatedTable);
         alert('Transaction updated successfully');
@@ -351,13 +357,14 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
 
     setFormData({
       Bc_Quota_Credit_Type: item?.Bc_Quota_Credit_Type ?? '',
-      Bc_Quantity_per_Week: item?.Bc_Quantity_per_Week ?? '',
+      Bc_Quantity_per_Week: item?.Bc_Quantity_per_Week ?? 0,
       // Bc_Flock: item?.Bc_Flock ?? '',
       Bc_Application_Date: formatDate(item.Bc_Application_Date),
       Bc_Start_Date: item?.Bc_Start_Date ? formatDate(item.Bc_Start_Date) : '',
       Bc_End_Date: item?.Bc_End_Date ? formatDate(item.Bc_End_Date) : '',
       Bc_Description: item?.Bc_Description ?? '',
-      Bc_checkbox: temp ?? existing
+      Bc_checkbox: temp ?? existing,
+      Bc_TotalQuantity:item?.Bc_TotalQuantity ?? 0,
     });
 
     // Checkbox ko UI me enable/disable ke liye
@@ -481,7 +488,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 />
               </div>
             </div>
-                  <div className="quota-form-row">
+            <div className="quota-form-row">
               <div className="quota-form-group">
                 <label>13 weeks(s) and 0 days(0)</label>
               </div>
@@ -551,7 +558,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
               </div>
             } */}
 
-      
+
 
             <div className="quota-form-group">
               <label>Description <span>*</span></label>
@@ -709,7 +716,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                     {/* <td>{item?.bc_flock}</td> */}
                     <td>{item?.bc_ApplicationDate ? formatDateFromString(item.bc_ApplicationDate) : ''}</td>
                     <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate) : ''}</td>
-                    <td>{item?.bc_endDate ? formatDateFromString(item.bc_endDate) : ''}</td>              
+                    <td>{item?.bc_endDate ? formatDateFromString(item.bc_endDate) : ''}</td>
                     <td>{item?.Bc_Comment}</td>
                   </tr>
                 )
