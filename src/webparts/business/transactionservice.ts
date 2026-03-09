@@ -40,7 +40,7 @@ export class TransactionService {
     payload = {
       Bc_Quota_Credit_Type: formData.Bc_Quota_Credit_Type,
       Bc_Quantity_per_Week: formData.Bc_Quantity_per_Week,
-      Bc_Flock: formData.Bc_Flock,
+      // Bc_Flock: formData.Bc_Flock,
       Bc_Application_Date: formData.Bc_Application_Date,
       Bc_Start_Date: formData.Bc_Start_Date,
       Bc_End_Date: formData.Bc_End_Date,
@@ -70,7 +70,7 @@ export class TransactionService {
       payload = {
         bc_QuotaCreditType: formData.Bc_Quota_Credit_Type,
         bc_quantityPerWeek: formData.Bc_Quantity_per_Week,
-        bc_flock: formData.Bc_Flock,
+        // bc_flock: formData.Bc_Flock,
         bc_ApplicationDate: formData.Bc_Application_Date,
         bc_startDate: formData.Bc_Start_Date,
         bc_endDate: formData.Bc_End_Date,
