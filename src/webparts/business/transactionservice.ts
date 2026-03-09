@@ -116,12 +116,12 @@ export class TransactionService {
 
   public fetchInitialQuotaofProducer(): number {
 
-    const totalUsageQuantity = this._transactionUsageHistory.reduce((sum: any, item: { bc_quantityPerWeek: any; }) => {
-      return sum + (item.bc_quantityPerWeek || 0);
+    const totalUsageQuantity = this._transactionUsageHistory.reduce((sum: any, item: { Bc_TotalQuantity: any; }) => {
+      return sum + (item.Bc_TotalQuantity || 0);
     }, 0);
 
-    const totalEarnedQuantity = this._transactionEarnedHistory.reduce((sum: any, item: { QuantityPerWeek: any; }) => {
-      return sum + (item.QuantityPerWeek || 0);
+    const totalEarnedQuantity = this._transactionEarnedHistory.reduce((sum: any, item: { TotalQuantity: any; }) => {
+      return sum + (item.TotalQuantity || 0);
     }, 0);
 
     return totalEarnedQuantity - totalUsageQuantity;
