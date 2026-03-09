@@ -19,7 +19,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
   const [formData, setFormData] = React.useState<any>({
     Bc_Quota_Credit_Type: '',
     Bc_Quantity_per_Week: '',
-    Bc_Flock: '',
+    // Bc_Flock: '',
     Bc_Application_Date: getCurrentDate(),
     Bc_Start_Date: '',
     Bc_End_Date: '',
@@ -150,7 +150,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     const requiredFields = [
       'Bc_Quota_Credit_Type',
       'Bc_Quantity_per_Week',
-      'Bc_Flock',
+      // 'Bc_Flock',
       'Bc_Application_Date',
       'Bc_Start_Date',
       'Bc_End_Date',
@@ -170,7 +170,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     setFormData({
       Bc_Quota_Credit_Type: '',
       Bc_Quantity_per_Week: '',
-      Bc_Flock: '',
+      // Bc_Flock: '',
       Bc_Application_Date: getCurrentDate(),
       Bc_Start_Date: '',
       Bc_End_Date: '',
@@ -234,7 +234,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     setFormData({
       Bc_Quota_Credit_Type: '',
       Bc_Quantity_per_Week: '',
-      Bc_Flock: '',
+      // Bc_Flock: '',
       Bc_Application_Date: getCurrentDate(),
       Bc_Start_Date: '',
       Bc_End_Date: '',
@@ -352,7 +352,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
     setFormData({
       Bc_Quota_Credit_Type: item?.Bc_Quota_Credit_Type ?? '',
       Bc_Quantity_per_Week: item?.Bc_Quantity_per_Week ?? '',
-      Bc_Flock: item?.Bc_Flock ?? '',
+      // Bc_Flock: item?.Bc_Flock ?? '',
       Bc_Application_Date: formatDate(item.Bc_Application_Date),
       Bc_Start_Date: item?.Bc_Start_Date ? formatDate(item.Bc_Start_Date) : '',
       Bc_End_Date: item?.Bc_End_Date ? formatDate(item.Bc_End_Date) : '',
@@ -434,7 +434,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
             </div>
 
             <div className="quota-form-row">
-              <div className="quota-form-group">
+              {/* <div className="quota-form-group">
                 <label>Flock <span>*</span></label>
                 <input
                   type="text"
@@ -443,7 +443,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                   onChange={handleChange}
                   placeholder="Enter"
                 />
-              </div>
+              </div> */}
 
               <div className="quota-form-group">
                 <label>Application Date <span>*</span></label>
@@ -636,7 +636,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
               <tr>
                 <th>Quota Credit Type</th>
                 <th>Quantity per Week</th>
-                <th>Flock</th>
+                {/* <th>Flock</th> */}
                 <th>Application Date</th>
                 <th>Start Date</th>
                 <th>End Date</th>
@@ -649,7 +649,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 <tr key={item.id}>
                   <td>{item?.Bc_Quota_Credit_Type}</td>
                   <td>{item?.Bc_Quantity_per_Week}</td>
-                  <td>{item?.Bc_Flock}</td>
+                  {/* <td>{item?.Bc_Flock}</td> */}
                   <td>{item?.Bc_Application_Date ? formatDateFromString(item.Bc_Application_Date) : ''}</td>
                   <td>{item?.Bc_Start_Date ? formatDateFromString(item.Bc_Start_Date) : ''}</td>
                   <td>{item?.Bc_End_Date ? formatDateFromString(item.Bc_End_Date) : ''}</td>
@@ -685,7 +685,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                 <th>Number of Weeks</th>
                 <th>Quantity per Day</th>
                 <th>Number of Days</th>
-                <th>Flock</th>
+                {/* <th>Flock</th> */}
                 <th>Application Date</th>
                 <th>Start Date</th>
                 <th>End Date</th>
@@ -705,7 +705,7 @@ const QuotaCredit: React.FC<IQuotaCreditProps> = ({ context }) => {
                     <td>{item.bc_endDate && item.bc_endDate ? weeksBetween(item.bc_startDate, item.bc_endDate) : ''}</td>
                     <td>{item?.bc_quantityPerDay}</td>
                     <td>{item.bc_startDate && item.bc_endDate ? daysBetween(item.bc_startDate, item.bc_endDate) : ''}</td>
-                    <td>{item?.bc_flock}</td>
+                    {/* <td>{item?.bc_flock}</td> */}
                     <td>{item?.bc_ApplicationDate ? formatDateFromString(item.bc_ApplicationDate) : ''}</td>
                     <td>{item?.bc_startDate ? formatDateFromString(item.bc_startDate) : ''}</td>
                     <td>{item?.bc_endDate ? formatDateFromString(item.bc_endDate) : ''}</td>              
