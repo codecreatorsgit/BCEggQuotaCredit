@@ -20,10 +20,10 @@ export const status = {
     Declined: "Declined"
 };
 
-export enum EmployeeStatus {
-
+export const CreditType = {
+    QuotaCreditTrade: "20 - Quota Credit Trade",
+    Utilized: "22 - Utilized",
 };
-
 // alert
 
 export const alerts = {
@@ -39,8 +39,6 @@ export const alerts = {
     ValidateQuantity:"Quantity must be less than Available in Balance",
     deleteconfirm: "Are you sure you want to delete this transaction?",
     QuantityGreaterthanZero:"Quantity must be less than Available in Balance",
-
-
 }
 
 export const fieldNamesMap: Record<string, string> = {

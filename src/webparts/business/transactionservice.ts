@@ -1,4 +1,4 @@
-import { listNames } from "../common/constants/ListNames";
+import { CreditType, listNames } from "../common/constants/ListNames";
 import { daysBetween, weeksBetween } from "../common/utils/helperfunctions";
 import { ApiService } from "../services/apiservices";
 
@@ -64,27 +64,22 @@ export class TransactionService {
   }
 
   public FormTradepayloadUsage(formData: any, producerkey: any) {
-    let { totalDays, quantityperday, totalQuantity } = this.GetTotalQuantity(formData);
-    let numberofDays = totalDays;
-    let noofweeks = formData.Bc_Start_Date && formData.Bc_End_Date ? weeksBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
-
     let payload: any = '';
 
-    if (formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade") {
+    if (formData?.Bc_Quota_Credit_Type === CreditType.QuotaCreditTrade) {
       payload = {
         bc_QuotaCreditType: formData.Bc_Quota_Credit_Type,
         bc_quantityPerWeek: formData.Bc_Quantity_per_Week,
-        // bc_flock: formData.Bc_Flock,
         bc_ApplicationDate: formData.Bc_Application_Date,
         bc_startDate: formData.Bc_Start_Date,
         bc_endDate: formData.Bc_End_Date,
         Bc_Comment: formData.Bc_Description,
         bc_producerId: Number(producerkey),
         Bc_checkbox: formData.Bc_checkbox,
-        bc_quantityPerDay: quantityperday,
-        Bc_TotalQuantity: totalQuantity,
-        Bc_TotalNoofDays: numberofDays,
-        Bc_NoofWeeks: noofweeks
+        bc_quantityPerDay: formData.Bc_Quantity_per_Week,
+        Bc_TotalQuantity: formData.Bc_Quantity_per_Week,
+        Bc_TotalNoofDays: 1,
+        Bc_NoofWeeks: 1
       };
     }
     return payload;
@@ -103,7 +98,7 @@ export class TransactionService {
 
     let payload: any = '';
 
-    if (formData?.Bc_Quota_Credit_Type === "20 - Quota Credit Trade") {
+    if (formData?.Bc_Quota_Credit_Type === CreditType.QuotaCreditTrade) {
       payload = {
         TransactionSubType: formData.Bc_Quota_Credit_Type,
         QuantityPerWeek: formData.Bc_Quantity_per_Week,
