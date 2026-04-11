@@ -9,10 +9,19 @@
           "manifest": "./src/webparts/quotaCredit/QuotaCreditWebPart.manifest.json"
         }
       ]
+    },
+    "cpp-application-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/cppApplication/CppApplicationWebPart.js",
+          "manifest": "./src/webparts/cppApplication/CppApplicationWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
   "localizedResources": {
-    "QuotaCreditWebPartStrings": "lib/webparts/quotaCredit/loc/{locale}.js"
+    "QuotaCreditWebPartStrings": "lib/webparts/quotaCredit/loc/{locale}.js",
+    "CppApplicationWebPartStrings": "lib/webparts/cppApplication/loc/{locale}.js"
   }
 }
