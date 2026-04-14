@@ -50,3 +50,13 @@ export const fieldNamesMap: Record<string, string> = {
     Bc_End_Date: 'End Date',
     Bc_Description: 'Description'
   };
+
+  export const BarnfieldNamesMap: any = {
+  Bc_Barn: "Barn #",
+  Bc_RequestedHatchDate: "Requested Hatch Date",
+  Bc_OfChicksOrdered: "# of Chicks Ordered",
+  Bc_ProductionType: "Production Type",
+  Bc_HousingSystem: "Housing System",
+  Bc_EstimateRemovalDate: "Estimate Removal Date",
+  Bc_RequestedRemovalDate: "Requested Removal Date"
+};
