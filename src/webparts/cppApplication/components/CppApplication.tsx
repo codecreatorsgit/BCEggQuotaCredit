@@ -183,7 +183,16 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
               <div className="form-row">
                 <div className="form-group">
                   <label>Housing System <span>*</span></label>
-                  <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/>
+                  {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/> */}
+                  <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
+                    <option value="">Select</option>
+                    <option value="CAWH - Caged White">Conventional</option>
+                    <option value="CAWH - Caged White">Enriched</option>
+                    <option value="CAWH - Caged White">Free Run</option>
+                    <option value="CAWH - Caged White">Free Range</option>
+                    <option value="CAWH - Caged White">Organic</option>
+                    <option value="CAWH - Caged White">Aviary / Floor</option>
+                  </select>
                 </div>
 
                 <div className="form-group">
