@@ -175,7 +175,13 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                   <label>Production Type <span>*</span></label>
                   <select name="Bc_ProductionType" value={formData.Bc_ProductionType} onChange={handleChange}>
                     <option value="">Select</option>
+                    <option value="CAWH - Caged White">FABR</option>
+                    <option value="CAWH - Caged White">FNBR</option>
+                    <option value="CAWH - Caged White">FNWH</option>
+                    <option value="CAWH - Caged White">ORBR</option>
+                    <option value="CAWH - Caged White">CABR</option>
                     <option value="CAWH - Caged White">CAWH</option>
+                    <option value="CAWH - Caged White">ENWH</option>
                   </select>
                 </div>
               </div>
