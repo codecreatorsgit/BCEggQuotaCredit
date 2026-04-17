@@ -2,8 +2,10 @@ import * as React from 'react';
 import styles from './CppApplication.module.scss';
 import type { ICppApplicationProps } from './ICppApplicationProps';
 import './style.css';
-import { alerts, BarnfieldNamesMap, listNames } from '../../common/constants/ListNames';
+import { alerts, BarnfieldNamesMap, listNames, status } from '../../common/constants/ListNames';
 import { ApiService } from '../../services/apiservices';
+import { formatDate, getCurrentDate } from '../../common/utils/helperfunctions';
+import { CPPService } from '../../business/cppservice';
 
 const editicon = require('../assets/edit.png');
 const deleteicon = require('../assets/delete.png');
@@ -13,12 +15,22 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
   const [popup, setpopup] = React.useState(false);
   const [producerkey, setproducerkey] = React.useState<any>('');
+  const [producerNoSelected, setproducerNoSelected] = React.useState<any>('');
+  const [pulletGrowerSelected, setpulletGrowerSelected] = React.useState<any>('');
+  const [epuAddressSelected, setepuAddressSelected] = React.useState<any>('');
+  const [hatcherySelected, sethatcherySelected] = React.useState<any>('');
+  const [hatcheryOther,] = React.useState<any>('');
+  const [premiseIdSelected, setpremiseIdSelected] = React.useState<any>('');
   const [Producers, setProducers] = React.useState<any>([]);
   const [BarnTable, setBarnTable] = React.useState<any>([]);
-
+  const [EPUAddresses, setEPUAddresses] = React.useState<any>([]);
+  const [pulletGrowers, setPulletGrowers] = React.useState<any>([]);
+  const [hatcheries, setHatcheries] = React.useState<any>([]);
+  const [barn, setBarn] = React.useState<any>([]);
   const [formStatus, setFormStatus] = React.useState<'submitting' | 'editing'>('submitting');
   const [editId, setEditId] = React.useState<any>(null);
-
+  const [oneNineWeekDate, setoneNineWeekDate] = React.useState<any>(null);
+  const [sevenTwoWeekDate, setsevenTwoWeekDate] = React.useState<any>(null);
   const [formData, setFormData] = React.useState<any>({
     Bc_Barn: '',
     Bc_RequestedHatchDate: '',
@@ -32,7 +44,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const api = React.useMemo(() => new ApiService(props.context), [props.context]);
 
   React.useEffect(() => {
-    const load = async () => {
+    const loadInit = async () => {
       const user = await api.getCurrentUser();
 
       const producers = await api.filterListItems(
@@ -41,21 +53,52 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
         "*"
       );
 
+      const hatcheries = await api.getListItems(
+        listNames.Hatcheries,
+        "*"
+      );
+
+      setHatcheries(hatcheries);
       setProducers(producers);
-      setproducerkey(producers?.[0]?.ID);
+      setproducerkey(producers?.[0]?.Title);
+      await producerOnChange(producers?.[0]?.Title);
+      setpulletGrowerSelected("Self Grown");
+      sethatcherySelected(hatcheries[0].Title);
     };
 
-    load();
+    loadInit();
   }, []);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
+    if (name === "Bc_RequestedHatchDate") {
+      setoneNineWeekDate(formatDate(CPPService.calculateWeekOneNineDate(value)))
+      setsevenTwoWeekDate(formatDate(CPPService.calculateWeekSevenTwoDate(value)))
+    }
   };
 
-    async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
+  async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
     setproducerkey(e.target.value);
+    let producerNumber = Producers.find((x: { ID: Number; }) => { return x.ID === Number(e.target.value) }).Title
+    setproducerNoSelected(producerNumber);
+    console.log(producerNoSelected)
+    await producerOnChange(producerNumber);
   }
+
+  async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
+    setpremiseIdSelected(e.target.value);
+    setepuAddressSelected(e.target.name);
+  }
+
+  async function filterbyPulletGrower(e: React.ChangeEvent<HTMLSelectElement>) {
+    setpulletGrowerSelected(e.target.value);
+  }
+
+  async function filterbyHatchery(e: React.ChangeEvent<HTMLSelectElement>) {
+    sethatcherySelected(e.target.value);
+  }
+
   const validateForm = (): boolean => {
     const requiredFields = [
       'Bc_Barn',
@@ -111,6 +154,43 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setpopup(true);
   };
 
+  const producerOnChange = async (producerNumber: string) => {
+    const producerpremises = await api.filterListItems(
+      listNames.FinalProducerPremiseBarns,
+      `Title eq '${producerNumber}'`,
+      "*"
+    );
+    const premiseTitles = producerpremises
+      .map(item => item.field_1)
+      .filter(Boolean); // remove null/undefined
+
+    const premiseBarns = producerpremises
+      .map(item => ({ BarnNumber: item.field_3 }))
+      .filter(item => item.BarnNumber);
+
+    setBarn(premiseBarns);
+
+    const premiseFilterValues = premiseTitles
+      .map(val => `Title eq '${val.replace(/'/g, "''")}'`) // escape single quotes
+      .join(" or ");
+
+    const premises = await api.filterListItems(
+      listNames.FinalPremises,
+      `${premiseFilterValues}`,
+      "*"
+    );
+    setEPUAddresses(premises);
+    setepuAddressSelected(premises[0].field_2);
+    setpremiseIdSelected(premises[0].Title);
+
+    const pulletGrowers = await api.filterListItems(
+      listNames.PulletGrowers,
+      `Title eq '${producerNumber}'`,
+      "*"
+    );
+    setPulletGrowers(pulletGrowers);
+  }
+
   const insertRowTemp = () => {
     if (!validateForm()) return;
 
@@ -122,7 +202,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       { ...formData, id: negatedMaxId }
     ]);
 
-      alert(alerts.SuccessFullySubmited);
+    alert(alerts.SuccessFullySubmited);
     setpopup(false);
   };
 
@@ -135,9 +215,35 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
     setBarnTable(updated);
 
-        alert(alerts.SuccessFullySubmited);
+    alert(alerts.SuccessFullySubmited);
     setpopup(false);
   };
+
+  const submitCPPForm = async () => {
+    let recordId = await api.insertRecord(listNames.CPPRequests, {
+      bcegg_producerIdId: producerkey,
+      bcegg_hatchery: hatcherySelected,
+      bcegg_pulletGrower: pulletGrowerSelected,
+      bcegg_status: status.PendingApproval,
+      bcegg_premiseId: premiseIdSelected,
+      bcegg_epuAddress: epuAddressSelected
+    });
+
+    BarnTable.forEach(async (barnTable: any) => {
+      await api.insertRecord(listNames.ProducerBarn, {
+        bcegg_CppRequestIdId: recordId,
+        Bc_Barn: barnTable.Bc_Barn,
+        Bc_RequestedHatchDate: barnTable.Bc_RequestedHatchDate,
+        Bc_OfChicksOrdered: barnTable.Bc_OfChicksOrdered,
+        Bc_ProductionType: barnTable.Bc_ProductionType,
+        Bc_HousingSystem: barnTable.Bc_HousingSystem,
+        Bc_EstimateRemovalDate: formatDate(CPPService.calculateWeekSevenTwoDate(barnTable.Bc_RequestedHatchDate)),
+        Bc_RequestedRemovalDate: barnTable.Bc_RequestedRemovalDate,
+        bcegg_19WeekDate: formatDate(CPPService.calculateWeekOneNineDate(barnTable.Bc_RequestedHatchDate))
+
+      });
+    });
+  }
 
   return (
     <section className={`${styles.cppApplication} ${hasTeamsContext ? styles.teams : ''}`}>
@@ -149,28 +255,32 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
             <div className="modal-box">
 
               <h2>{formStatus === 'editing' ? 'Edit Barn' : 'Add Barn'}</h2>
-
               <div className="form-row">
                 <div className="form-group">
                   <label>Barn # <span>*</span></label>
                   <select name="Bc_Barn" value={formData.Bc_Barn} onChange={handleChange}>
                     <option value="">Select</option>
-                    <option value="3">3</option>
+                    {barn?.map((item: any) => (
+                      <option value={item?.BarnNumber}>{item?.BarnNumber}</option>
+                    ))}
                   </select>
                 </div>
-
-                <div className="form-group">
-                  <label>Requested Hatch Date <span>*</span></label>
-                  <input type="date" name="Bc_RequestedHatchDate" value={formData.Bc_RequestedHatchDate} onChange={handleChange}/>
-                </div>
-              </div>
-
-              <div className="form-row">
                 <div className="form-group">
                   <label>Chicks Ordered <span>*</span></label>
-                  <input type="text" name="Bc_OfChicksOrdered" value={formData.Bc_OfChicksOrdered} onChange={handleChange}/>
+                  <input type="text" name="Bc_OfChicksOrdered" value={formData.Bc_OfChicksOrdered} onChange={handleChange} />
                 </div>
-
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Requested Hatch Date <span>*</span></label>
+                  <input type="date" min={getCurrentDate()} name="Bc_RequestedHatchDate" value={formData.Bc_RequestedHatchDate} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label>19 Week Date <span>*</span></label>
+                  <label>{oneNineWeekDate}</label>
+                </div>
+              </div>
+              <div className="form-row">
                 <div className="form-group">
                   <label>Production Type <span>*</span></label>
                   <select name="Bc_ProductionType" value={formData.Bc_ProductionType} onChange={handleChange}>
@@ -184,9 +294,6 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                     <option value="CAWH - Caged White">ENWH</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="form-row">
                 <div className="form-group">
                   <label>Housing System <span>*</span></label>
                   {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/> */}
@@ -200,39 +307,31 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                     <option value="CAWH - Caged White">Aviary / Floor</option>
                   </select>
                 </div>
-
-                <div className="form-group">
-                  <label>Estimate Removal Date <span>*</span></label>
-                  <input type="date" name="Bc_EstimateRemovalDate" value={formData.Bc_EstimateRemovalDate} onChange={handleChange}/>
-                </div>
               </div>
-
               <div className="form-row">
-                <div className="form-group full-width">
-                  <label>Requested Removal Date <span>*</span></label>
-                  <input type="date" name="Bc_RequestedRemovalDate" value={formData.Bc_RequestedRemovalDate} onChange={handleChange}/>
+                <div className="form-group">
+                  <label>Estimate Removal Date <span>(based on 72 weeks)</span></label>
+                  <input type="date" name="Bc_EstimateRemovalDate" value={sevenTwoWeekDate} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label>Requested Removal Date <span></span></label>
+                  <input type="date" name="Bc_RequestedRemovalDate" value={formData.Bc_RequestedRemovalDate} onChange={handleChange} />
                 </div>
               </div>
-
               <div className="modal-actions">
                 <button className="btn-cancel" onClick={() => setpopup(false)}>
                   Cancel
                 </button>
-
                 <button
                   className={`btn-save ${formStatus === "editing" ? "updateone" : ""}`}
-                  onClick={formStatus === "submitting" ? insertRowTemp : updatingFormTemp}
-                >
+                  onClick={formStatus === "submitting" ? insertRowTemp : updatingFormTemp}>
                   {formStatus === "submitting" ? "Save" : "Update"}
                 </button>
               </div>
-
             </div>
           </div>
         )}
 
-
-     
         {/* ================= HEADER (UNCHANGED EXACTLY) ================= */}
         <div className="header">
           <div className="form-group">
@@ -248,7 +347,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
           <div className="header-buttons">
             <button className="btn-cancel">Cancel</button>
             <button className="btn-history">Applications History</button>
-            <button className="btn-submit">Submit</button>
+            <button className="btn-submit" onClick={() => submitCPPForm()}>Submit</button>
           </div>
         </div>
 
@@ -258,30 +357,40 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
           <div className="grid-4">
             <div className="form-group">
               <label>EPU Address <span>*</span></label>
-              <select>
-                <option>4808 Mt Lehman Rd</option>
+              <select onChange={(e) => filterbyEPUAddress(e)}>
+                {EPUAddresses?.map((item: any) => (
+                  <option value={item?.Title}>{item?.field_2}</option>
+                ))}
               </select>
             </div>
 
             <div className="form-group">
               <label>Premise ID <span>*</span></label>
-              <select>
-                <option>BC339DR3C</option>
+              <select disabled={true} value={premiseIdSelected}>
+                {EPUAddresses?.map((item: any) => (
+                  <option value={item?.Title}>{item?.Title}</option>
+                ))}
               </select>
             </div>
 
             <div className="form-group">
               <label>Pullet Grower <span>*</span></label>
-              <select>
+              <select value={pulletGrowerSelected} onChange={(e) => filterbyPulletGrower(e)}>
                 <option>Self Grown</option>
+                {pulletGrowers?.map((item: any) => (
+                  <option>{item?.field_1}</option>
+                ))}
               </select>
             </div>
 
             <div className="form-group">
               <label>Hatchery <span>*</span></label>
-              <select>
-                <option>Self Grown</option>
+              <select value={hatcherySelected} onChange={(e) => filterbyHatchery(e)}>
+                {hatcheries?.map((item: any) => (
+                  <option value={item?.Title}>{item?.field_4}</option>
+                ))}
               </select>
+              <input type='text' value={hatcheryOther} hidden={hatcherySelected != "Other"}></input>
             </div>
           </div>
         </div>
@@ -292,7 +401,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
             <button className="btn-add" onClick={openAddPopup}>Add Barn</button>
           </div>
 
-    
+
           <div className="table-wrapper">
             <table>
               <thead>
@@ -309,7 +418,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
               </thead>
 
               <tbody>
-              
+
                 {BarnTable.map((item: any) => (
                   <tr key={item.id}>
                     <td>{item.Bc_Barn}</td>
@@ -338,6 +447,8 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       </div>
     </section>
   );
+
+
 };
 
 export default CppApplication;
