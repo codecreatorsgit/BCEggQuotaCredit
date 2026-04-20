@@ -4,7 +4,7 @@ import type { ICppApplicationProps } from './ICppApplicationProps';
 import './style.css';
 import { alerts, BarnfieldNamesMap, listNames, status } from '../../common/constants/ListNames';
 import { ApiService } from '../../services/apiservices';
-import { formatDate, getCurrentDate } from '../../common/utils/helperfunctions';
+import { formatDate, formatDateFromString, getCurrentDate } from '../../common/utils/helperfunctions';
 import { CPPService } from '../../business/cppservice';
 
 const editicon = require('../assets/edit.png');
@@ -67,6 +67,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     };
 
     loadInit();
+    getPendingBarns()
   }, []);
 
   const handleChange = (e: any) => {
@@ -147,23 +148,57 @@ const openAddPopup = () => {
 
   setpopup(true);
 };
+const openEditPopup = (item: any) => {
+  setFormStatus('editing');
+  setEditId(item.id);
 
-  const openEditPopup = (item: any) => {
-    setFormStatus('editing');
-    setEditId(item.id);
+  const hatchDate = item.Bc_RequestedHatchDate
+    ? item.Bc_RequestedHatchDate.split('T')[0]
+    : '';
 
-    setFormData({
-      Bc_Barn: item.Bc_Barn,
-      Bc_RequestedHatchDate: item.Bc_RequestedHatchDate,
-      Bc_OfChicksOrdered: item.Bc_OfChicksOrdered,
-      Bc_ProductionType: item.Bc_ProductionType,
-      Bc_HousingSystem: item.Bc_HousingSystem,
-      Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
-      Bc_RequestedRemovalDate: item.Bc_RequestedRemovalDate
-    });
+  const removalDate = item.Bc_RequestedRemovalDate
+    ? item.Bc_RequestedRemovalDate.split('T')[0]
+    : '';
 
-    setpopup(true);
-  };
+  setFormData({
+    Bc_Barn: item.Bc_Barn,
+    Bc_RequestedHatchDate: hatchDate,
+    Bc_OfChicksOrdered: item.Bc_OfChicksOrdered,
+    Bc_ProductionType: item.Bc_ProductionType,
+    Bc_HousingSystem: item.Bc_HousingSystem,
+    Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
+    Bc_RequestedRemovalDate: removalDate
+  });
+
+  if (hatchDate) {
+    setoneNineWeekDate(
+      formatDate(CPPService.calculateWeekOneNineDate(hatchDate))
+    );
+
+    setsevenTwoWeekDate(
+      formatDate(CPPService.calculateWeekSevenTwoDate(hatchDate))
+    );
+  }
+
+  setpopup(true);
+};
+
+  // const openEditPopup = (item: any) => {
+  //   setFormStatus('editing');
+  //   setEditId(item.id);
+
+  //   setFormData({
+  //     Bc_Barn: item.Bc_Barn,
+  //     Bc_RequestedHatchDate: item.Bc_RequestedHatchDate,
+  //     Bc_OfChicksOrdered: item.Bc_OfChicksOrdered,
+  //     Bc_ProductionType: item.Bc_ProductionType,
+  //     Bc_HousingSystem: item.Bc_HousingSystem,
+  //     Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
+  //     Bc_RequestedRemovalDate: item.Bc_RequestedRemovalDate
+  //   });
+
+  //   setpopup(true);
+  // };
 
   const producerOnChange = async (producerNumber: string) => {
     const producerpremises = await api.filterListItems(
@@ -263,6 +298,50 @@ const openAddPopup = () => {
            window.location.reload();
     
   }
+
+ const getPendingBarns = async () => {
+  try {
+    const itemsbarn = await api.filterListItemsWithExpand(
+      listNames.ProducerBarn,
+      ``,
+      '*,bcegg_CppRequestId/ID',
+      'bcegg_CppRequestId'
+    );
+
+    if (itemsbarn.length === 0) {
+      setBarnTable([]);
+      return;
+    }
+
+    let cppIds: number[] = [];
+
+    for (let item of itemsbarn) {
+      const data = await api.filterListItemsWithExpand(
+        listNames.CPPRequests,
+        `bcegg_status eq '${status.PendingApproval}' and ID eq ${item?.bcegg_CppRequestId?.ID}`,
+        'ID',
+        ''
+      );
+
+      if (data.length > 0) {
+        cppIds.push(item?.bcegg_CppRequestId?.ID);
+      }
+    }
+
+    console.log("Matched CPP IDs:", cppIds);
+
+    const filteredBarns = itemsbarn.filter((item: any) =>
+      cppIds.includes(item?.bcegg_CppRequestId?.ID)
+    );
+
+    console.log("Final Barn Data:", filteredBarns);
+
+    setBarnTable(filteredBarns);
+
+  } catch (err) {
+    console.error("Error fetching barns:", err);
+  }
+};
 
   return (
     <section className={`${styles.cppApplication} ${hasTeamsContext ? styles.teams : ''}`}>
@@ -442,13 +521,13 @@ const openAddPopup = () => {
 
                 {BarnTable.map((item: any) => (
                   <tr key={item.id}>
-                    <td>{item.Bc_Barn}</td>
-                    <td>{item.Bc_RequestedHatchDate}</td>
-                    <td>{item.Bc_OfChicksOrdered}</td>
-                    <td>{item.Bc_ProductionType}</td>
-                    <td>{item.Bc_HousingSystem}</td>
-                    <td>{item.Bc_EstimateRemovalDate}</td>
-                    <td>{item.Bc_RequestedRemovalDate}</td>
+                    <td>{item?.Bc_Barn}</td>
+                    <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+                    <td>{item?.Bc_OfChicksOrdered}</td>
+                    <td>{item?.Bc_ProductionType}</td>
+                    <td>{item?.Bc_HousingSystem}</td>
+                    <td>{item?.Bc_EstimateRemovalDate ? formatDateFromString(item.Bc_EstimateRemovalDate) : ''}</td>
+                    <td>{item?.Bc_RequestedRemovalDate ? formatDateFromString(item.Bc_RequestedRemovalDate) : ''}</td>
                     <td>
                       <div className="actions">
                         <span className="delete"><img src={deleteicon} /></span>
