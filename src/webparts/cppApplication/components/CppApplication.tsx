@@ -231,6 +231,9 @@ const openAddPopup = () => {
     setpopup(false);
   };
 
+    const handleAllCancel = () => {
+    window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
+  };
   const submitCPPForm = async () => {
     let recordId = await api.insertRecord(listNames.CPPRequests, {
       bcegg_producerIdId: producerkey,
@@ -255,6 +258,10 @@ const openAddPopup = () => {
 
       });
     });
+
+          alert(alerts.SuccessFullySubmited);
+           window.location.reload();
+    
   }
 
   return (
@@ -311,7 +318,7 @@ const openAddPopup = () => {
                   <label>Housing System <span>*</span></label>
                   <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/>
                   {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/> */}
-                  <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
+                  {/* <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
                     <option value="">Select</option>
                     <option value="Conventional">Conventional</option>
                     <option value="Enriched">Enriched</option>
@@ -319,7 +326,7 @@ const openAddPopup = () => {
                     <option value="Free Range">Free Range</option>
                     <option value="Organic">Organic</option>
                     <option value="Aviary / Floor">Aviary / Floor</option>
-                  </select>
+                  </select> */}
                 </div>
               </div>
               <div className="form-row">
@@ -359,7 +366,7 @@ const openAddPopup = () => {
           </div>
 
           <div className="header-buttons">
-            <button className="btn-cancel">Cancel</button>
+            <button className="btn-cancel" onClick={handleAllCancel}>Cancel</button>
             <button className="btn-history">Applications History</button>
             <button className="btn-submit" onClick={() => submitCPPForm()}>Submit</button>
           </div>
