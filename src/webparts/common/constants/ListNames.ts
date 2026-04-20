@@ -9,9 +9,16 @@ export const listNames = {
     QuotaCreditType: "Quota Credit Type",
     QuotaCreditTypes: "Quota Credit Types",
     FinalQuotaCreditUsageList: "Quota Credit Requests",
-    QuotaCreditTransactions: "Quota Credit Usage Transaction" ,
+    QuotaCreditTransactions: "Quota Credit Usage Transaction",
     QuotaCreditEarnTransactions: "Quota Credit Earn Transactions",
-    EarnedUsageQuotaCreditMappings: "Earned Usage Quota Credit Mappings"
+    EarnedUsageQuotaCreditMappings: "Earned Usage Quota Credit Mappings",
+    //CPP
+    FinalPremises: "FinalPremises",
+    FinalProducerPremiseBarns: "FinalProducerPremiseBarns",
+    PulletGrowers: "Pullet Growers",
+    Hatcheries:"Hatcheries",
+    CPPRequests:"CPP Requests",
+    ProducerBarn:"ProducerBarn"
 };
 
 export const status = {
@@ -35,11 +42,11 @@ export const alerts = {
     SuccessFullyupdated: "Record Updated successfully",
     catcherrors: "Error while saving data",
     Deleterecord: "Record Deleted successfully",
-    Notransactions:"Please Add Quota Credit Transaction Entry First",
-    allcancel :"All temporary transactions cancelled",
-    ValidateQuantity:"Quantity must be less than Available in Balance",
+    Notransactions: "Please Add Quota Credit Transaction Entry First",
+    allcancel: "All temporary transactions cancelled",
+    ValidateQuantity: "Quantity must be less than Available in Balance",
     deleteconfirm: "Are you sure you want to delete this transaction?",
-    QuantityGreaterthanZero:"Quantity must be less than Available in Balance",
+    QuantityGreaterthanZero: "Quantity must be less than Available in Balance",
 }
 
 export const fieldNamesMap: Record<string, string> = {
@@ -50,14 +57,14 @@ export const fieldNamesMap: Record<string, string> = {
     Bc_Start_Date: 'Start Date',
     Bc_End_Date: 'End Date',
     Bc_Description: 'Description'
-  };
+};
 
-  export const BarnfieldNamesMap: any = {
-  Bc_Barn: "Barn #",
-  Bc_RequestedHatchDate: "Requested Hatch Date",
-  Bc_OfChicksOrdered: "# of Chicks Ordered",
-  Bc_ProductionType: "Production Type",
-  Bc_HousingSystem: "Housing System",
-  Bc_EstimateRemovalDate: "Estimate Removal Date",
-  Bc_RequestedRemovalDate: "Requested Removal Date"
+export const BarnfieldNamesMap: any = {
+    Bc_Barn: "Barn #",
+    Bc_RequestedHatchDate: "Requested Hatch Date",
+    Bc_OfChicksOrdered: "# of Chicks Ordered",
+    Bc_ProductionType: "Production Type",
+    Bc_HousingSystem: "Housing System",
+    Bc_EstimateRemovalDate: "Estimate Removal Date",
+    Bc_RequestedRemovalDate: "Requested Removal Date"
 };
