@@ -86,6 +86,17 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     await producerOnChange(producerNumber);
   }
 
+  const calculate19WeekDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + (19 * 7)); 
+  return formatDate(date);
+};
+
+const calculate72WeekDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + (72 * 7)); 
+  return formatDate(date);
+};
   async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
     setpremiseIdSelected(e.target.value);
     setepuAddressSelected(e.target.name);
@@ -120,22 +131,22 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     return true;
   };
 
-  const openAddPopup = () => {
-    setFormStatus('submitting');
-    setEditId(null);
+const openAddPopup = () => {
+  setFormStatus('submitting');
+  setEditId(null);
 
-    setFormData({
-      Bc_Barn: '',
-      Bc_RequestedHatchDate: '',
-      Bc_OfChicksOrdered: '',
-      Bc_ProductionType: '',
-      Bc_HousingSystem: '',
-      Bc_EstimateRemovalDate: '',
-      Bc_RequestedRemovalDate: ''
-    });
+  setFormData({
+    Bc_Barn: '',
+    Bc_RequestedHatchDate: calculate19WeekDate(),   
+    Bc_OfChicksOrdered: '',
+    Bc_ProductionType: '',
+    Bc_HousingSystem: '',
+    Bc_EstimateRemovalDate: calculate72WeekDate(),  
+    Bc_RequestedRemovalDate: ''
+  });
 
-    setpopup(true);
-  };
+  setpopup(true);
+};
 
   const openEditPopup = (item: any) => {
     setFormStatus('editing');
@@ -215,10 +226,14 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
     setBarnTable(updated);
 
+        alert(alerts.SuccessFullyupdated);
     alert(alerts.SuccessFullySubmited);
     setpopup(false);
   };
 
+    const handleAllCancel = () => {
+    window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
+  };
   const submitCPPForm = async () => {
     let recordId = await api.insertRecord(listNames.CPPRequests, {
       bcegg_producerIdId: producerkey,
@@ -243,6 +258,10 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
       });
     });
+
+          alert(alerts.SuccessFullySubmited);
+           window.location.reload();
+    
   }
 
   return (
@@ -285,6 +304,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                   <label>Production Type <span>*</span></label>
                   <select name="Bc_ProductionType" value={formData.Bc_ProductionType} onChange={handleChange}>
                     <option value="">Select</option>
+                    <option value="CAWH - Caged White">CAWH</option>
                     <option value="FABR">FABR</option>
                     <option value="FNBR">FNBR</option>
                     <option value="FNWH">FNWH</option>
@@ -296,8 +316,9 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                 </div>
                 <div className="form-group">
                   <label>Housing System <span>*</span></label>
+                  <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/>
                   {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/> */}
-                  <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
+                  {/* <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
                     <option value="">Select</option>
                     <option value="Conventional">Conventional</option>
                     <option value="Enriched">Enriched</option>
@@ -305,7 +326,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                     <option value="Free Range">Free Range</option>
                     <option value="Organic">Organic</option>
                     <option value="Aviary / Floor">Aviary / Floor</option>
-                  </select>
+                  </select> */}
                 </div>
               </div>
               <div className="form-row">
@@ -345,7 +366,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
           </div>
 
           <div className="header-buttons">
-            <button className="btn-cancel">Cancel</button>
+            <button className="btn-cancel" onClick={handleAllCancel}>Cancel</button>
             <button className="btn-history">Applications History</button>
             <button className="btn-submit" onClick={() => submitCPPForm()}>Submit</button>
           </div>
