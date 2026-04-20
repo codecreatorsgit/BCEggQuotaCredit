@@ -4,6 +4,7 @@ import type { ICppApplicationProps } from './ICppApplicationProps';
 import './style.css';
 import { alerts, BarnfieldNamesMap, listNames } from '../../common/constants/ListNames';
 import { ApiService } from '../../services/apiservices';
+import { formatDate } from '../../common/utils/helperfunctions';
 
 const editicon = require('../assets/edit.png');
 const deleteicon = require('../assets/delete.png');
@@ -56,6 +57,19 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
     setproducerkey(e.target.value);
   }
+
+  const calculate19WeekDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + (19 * 7)); 
+  return formatDate(date);
+};
+
+const calculate72WeekDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + (72 * 7)); 
+  return formatDate(date);
+};
+
   const validateForm = (): boolean => {
     const requiredFields = [
       'Bc_Barn',
@@ -77,22 +91,22 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     return true;
   };
 
-  const openAddPopup = () => {
-    setFormStatus('submitting');
-    setEditId(null);
+const openAddPopup = () => {
+  setFormStatus('submitting');
+  setEditId(null);
 
-    setFormData({
-      Bc_Barn: '',
-      Bc_RequestedHatchDate: '',
-      Bc_OfChicksOrdered: '',
-      Bc_ProductionType: '',
-      Bc_HousingSystem: '',
-      Bc_EstimateRemovalDate: '',
-      Bc_RequestedRemovalDate: ''
-    });
+  setFormData({
+    Bc_Barn: '',
+    Bc_RequestedHatchDate: calculate19WeekDate(),   
+    Bc_OfChicksOrdered: '',
+    Bc_ProductionType: '',
+    Bc_HousingSystem: '',
+    Bc_EstimateRemovalDate: calculate72WeekDate(),  
+    Bc_RequestedRemovalDate: ''
+  });
 
-    setpopup(true);
-  };
+  setpopup(true);
+};
 
   const openEditPopup = (item: any) => {
     setFormStatus('editing');
@@ -135,7 +149,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
     setBarnTable(updated);
 
-        alert(alerts.SuccessFullySubmited);
+        alert(alerts.SuccessFullyupdated);
     setpopup(false);
   };
 
@@ -175,13 +189,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                   <label>Production Type <span>*</span></label>
                   <select name="Bc_ProductionType" value={formData.Bc_ProductionType} onChange={handleChange}>
                     <option value="">Select</option>
-                    <option value="CAWH - Caged White">FABR</option>
-                    <option value="CAWH - Caged White">FNBR</option>
-                    <option value="CAWH - Caged White">FNWH</option>
-                    <option value="CAWH - Caged White">ORBR</option>
-                    <option value="CAWH - Caged White">CABR</option>
                     <option value="CAWH - Caged White">CAWH</option>
-                    <option value="CAWH - Caged White">ENWH</option>
                   </select>
                 </div>
               </div>
@@ -189,16 +197,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
               <div className="form-row">
                 <div className="form-group">
                   <label>Housing System <span>*</span></label>
-                  {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/> */}
-                  <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
-                    <option value="">Select</option>
-                    <option value="CAWH - Caged White">Conventional</option>
-                    <option value="CAWH - Caged White">Enriched</option>
-                    <option value="CAWH - Caged White">Free Run</option>
-                    <option value="CAWH - Caged White">Free Range</option>
-                    <option value="CAWH - Caged White">Organic</option>
-                    <option value="CAWH - Caged White">Aviary / Floor</option>
-                  </select>
+                  <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/>
                 </div>
 
                 <div className="form-group">

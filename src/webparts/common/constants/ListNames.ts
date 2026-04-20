@@ -32,6 +32,7 @@ export const alerts = {
     error: "Error while saving items. Check console for details.",
     RequiredFields: "Please fill the required field:",
     SuccessFullySubmited: "Record added successfully",
+    SuccessFullyupdated: "Record Updated successfully",
     catcherrors: "Error while saving data",
     Deleterecord: "Record Deleted successfully",
     Notransactions:"Please Add Quota Credit Transaction Entry First",
