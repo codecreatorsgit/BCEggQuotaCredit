@@ -487,7 +487,7 @@ const openEditPopup = (item: any) => {
               <label>Hatchery <span>*</span></label>
               <select value={hatcherySelected} onChange={(e) => filterbyHatchery(e)}>
                 {hatcheries?.map((item: any) => (
-                  <option value={item?.Title}>{item?.field_4}</option>
+                  <option value={item?.field_4}>{item?.field_4}</option>
                 ))}
               </select>
               <input type='text' value={hatcheryOther} hidden={hatcherySelected != "Other"}></input>
