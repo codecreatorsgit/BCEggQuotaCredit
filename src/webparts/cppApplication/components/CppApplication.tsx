@@ -6,7 +6,6 @@ import { alerts, BarnfieldNamesMap, listNames, status } from '../../common/const
 import { ApiService } from '../../services/apiservices';
 import { formatDate, formatDateFromString, getCurrentDate } from '../../common/utils/helperfunctions';
 import { CPPService } from '../../business/cppservice';
-import { TransactionService } from '../../business/transactionservice';
 
 const editicon = require('../assets/edit.png');
 const deleteicon = require('../assets/delete.png');
@@ -260,7 +259,7 @@ const updatingFormTemp = async () => {
     }
 
     // ================= SHAREPOINT UPDATE =================
-    let payload = TransactionService.ProducerBarnFormpayload(
+    let payload = CPPService.ProducerBarnFormpayload(
       formData,
       formoneId
     );
@@ -320,13 +319,13 @@ console.log(editId)
         return;
       }
 
-      let CPPPayload = TransactionService.CPPRequestsFormpayload(status.PendingApproval, obj);
+      let CPPPayload = CPPService.CPPRequestsFormpayload(status.PendingApproval, obj);
       let recordId = await api.insertRecord(listNames.CPPRequests, CPPPayload);
       const tempRows = BarnTable.filter((item: any) => item.id < 0);
 
       for (const barnTable of tempRows) {
         let barnPayload =
-          TransactionService.ProducerBarnFormpayload(barnTable, recordId);
+          CPPService.ProducerBarnFormpayload(barnTable, recordId);
         await api.insertRecord(listNames.ProducerBarn, barnPayload);
       }
 
