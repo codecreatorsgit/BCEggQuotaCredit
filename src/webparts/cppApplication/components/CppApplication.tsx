@@ -387,7 +387,28 @@ console.log(editId)
     }
   };
 
+  const deletingitem = async (item: any, id: any) => {
+    try {
+      const confirmed = window.confirm(alerts.deleteconfirm);
+      if (!confirmed) return;
 
+      console.log("Deleting Item:", item);
+
+      if (id !== undefined && id !== null && id < 0) {
+        setBarnTable((prev: any[]) => prev.filter(row => row.id !== id));
+        return;
+      }
+      await api.deleteRecord(item?.ID, listNames.ProducerBarn);
+
+      setBarnTable((prev: any[]) =>
+        prev.filter(row => row.ID !== item.ID)
+      );
+
+    } catch (error) {
+      console.error("Delete Error:", error);
+      alert(alerts.catcherrors);
+    }
+  };
 
   return (
     <section className={`${styles.cppApplication} ${hasTeamsContext ? styles.teams : ''}`}>
@@ -576,7 +597,7 @@ console.log(editId)
                     <td>{item?.Bc_RequestedRemovalDate ? formatDateFromString(item.Bc_RequestedRemovalDate) : ''}</td>
                     <td>
                       <div className="actions">
-                        <span className="delete"><img src={deleteicon} /></span>
+                        <span className="delete" onClick={() => deletingitem(item, item?.id)}><img src={deleteicon} /></span>
                         <span className="edit" onClick={() => openEditPopup(item, item.id)}>
                           <img src={editicon} />
                         </span>
