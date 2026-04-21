@@ -47,6 +47,11 @@ export const alerts = {
     ValidateQuantity: "Quantity must be less than Available in Balance",
     deleteconfirm: "Are you sure you want to delete this transaction?",
     QuantityGreaterthanZero: "Quantity must be less than Available in Balance",
+    
+    Cppdeleteconfirm: "Are you sure you want to delete this Barn Table?",
+    CppNotransactions: "Please Add ( Add Barn ) Entry First",
+
+
 }
 
 export const fieldNamesMap: Record<string, string> = {

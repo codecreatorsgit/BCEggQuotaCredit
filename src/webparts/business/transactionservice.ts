@@ -1,6 +1,7 @@
 import { CreditType, listNames } from "../common/constants/ListNames";
-import { daysBetween, weeksBetween } from "../common/utils/helperfunctions";
+import { daysBetween, formatDate, weeksBetween } from "../common/utils/helperfunctions";
 import { ApiService } from "../services/apiservices";
+import { CPPService } from "./cppservice";
 
 // Business Layer
 export class TransactionService {
@@ -17,9 +18,9 @@ export class TransactionService {
     return quota <= (availableCredit - approvalPendingCredit);
   }
 
-  static validateQuotaWithDays(quota: number, availableCredit: number, approvalPendingCredit: number,totalDays:number): boolean {
-    let quantityPerDay= this.calculateQuantityPerDay(quota);
-    let totalQuantity=quantityPerDay*totalDays;
+  static validateQuotaWithDays(quota: number, availableCredit: number, approvalPendingCredit: number, totalDays: number): boolean {
+    let quantityPerDay = this.calculateQuantityPerDay(quota);
+    let totalQuantity = quantityPerDay * totalDays;
     return totalQuantity <= (availableCredit - approvalPendingCredit);
   }
 
@@ -34,6 +35,34 @@ export class TransactionService {
     return Bc_QuantityPerDay * Bc_TotalNoofDays;
   }
 
+  static ProducerBarnFormpayload(barnTable: any, recordId: any) {
+    let payload = {
+      bcegg_CppRequestIdId: recordId,
+      Bc_Barn: barnTable.Bc_Barn,
+      Bc_RequestedHatchDate: barnTable.Bc_RequestedHatchDate,
+      Bc_OfChicksOrdered: barnTable.Bc_OfChicksOrdered,
+      Bc_ProductionType: barnTable.Bc_ProductionType,
+      Bc_HousingSystem: barnTable.Bc_HousingSystem,
+      Bc_EstimateRemovalDate: formatDate(CPPService.calculateWeekSevenTwoDate(barnTable.Bc_RequestedHatchDate)),
+      Bc_RequestedRemovalDate: barnTable.Bc_RequestedRemovalDate,
+      bcegg_19WeekDate: formatDate(CPPService.calculateWeekOneNineDate(barnTable.Bc_RequestedHatchDate))
+    }
+    return payload
+  }
+
+  static CPPRequestsFormpayload(status:any,data:any) {
+    let payload = {
+    bcegg_producerIdId: data.producerkey,
+         bcegg_hatchery: data.hatcherySelected,
+         bcegg_pulletGrower: data.pulletGrowerSelected,
+         bcegg_status: status,
+         bcegg_premiseId: data.premiseIdSelected,
+         bcegg_epuAddress: data.epuAddressSelected
+    }
+    return payload
+  }
+
+  
 
   public Formpayload(formData: any, producerkey: any, status: any, list?: any) {
     let totalDays = formData.Bc_Start_Date && formData.Bc_End_Date ? daysBetween(formData.Bc_Start_Date, formData.Bc_End_Date) : 0;
@@ -105,17 +134,17 @@ export class TransactionService {
         //ApplicationDate: formData.Bc_Application_Date,
         StartDate: formData.Bc_Start_Date,
         EndDate: formData.Bc_End_Date,
-        ProcessingStatus:"Processed",
+        ProcessingStatus: "Processed",
         Description: formData.Bc_Description,
-        ProducerId:  formData.Bc_Transfer_To_Producer,
+        ProducerId: formData.Bc_Transfer_To_Producer,
         QuantityPerDay: formData.Bc_Quantity_per_Week,
         TotalQuantity: formData.Bc_Quantity_per_Week,
         NumberOfDays: numberofDays,
         NumberOfWeeks: noofweeks,
-        ApplicationDate : this.getOldestEearnedransaction().ApplicationDate,
-        TransactionType:"Earn"
+        ApplicationDate: this.getOldestEearnedransaction().ApplicationDate,
+        TransactionType: "Earn"
       };
-      
+
     }
     return payload;
   }
@@ -153,7 +182,7 @@ export class TransactionService {
   public async fetchHistoricalEarnedTransactions(producerid: number): Promise<any> {
     const quotaEarnedTransactions =
       await this.api.filterListItems(listNames.QuotaCreditEarnTransactions,
-        `ProducerId eq '${producerid}' and bc_isExpired ne 1 and bc_isCreditUsed ne 1`, "*"); 
+        `ProducerId eq '${producerid}' and bc_isExpired ne 1 and bc_isCreditUsed ne 1`, "*");
     this._transactionEarnedHistory = quotaEarnedTransactions;
     return quotaEarnedTransactions;
   }

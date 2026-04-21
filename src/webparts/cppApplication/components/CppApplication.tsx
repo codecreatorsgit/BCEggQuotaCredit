@@ -6,6 +6,7 @@ import { alerts, BarnfieldNamesMap, listNames, status } from '../../common/const
 import { ApiService } from '../../services/apiservices';
 import { formatDate, formatDateFromString, getCurrentDate } from '../../common/utils/helperfunctions';
 import { CPPService } from '../../business/cppservice';
+import { TransactionService } from '../../business/transactionservice';
 
 const editicon = require('../assets/edit.png');
 const deleteicon = require('../assets/delete.png');
@@ -13,6 +14,7 @@ const deleteicon = require('../assets/delete.png');
 const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const { hasTeamsContext } = props;
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [popup, setpopup] = React.useState(false);
   const [producerkey, setproducerkey] = React.useState<any>('');
   const [producerNoSelected, setproducerNoSelected] = React.useState<any>('');
@@ -31,6 +33,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const [editId, setEditId] = React.useState<any>(null);
   const [oneNineWeekDate, setoneNineWeekDate] = React.useState<any>(null);
   const [sevenTwoWeekDate, setsevenTwoWeekDate] = React.useState<any>(null);
+  const [formoneId, setformoneId]: any = React.useState(0);
   const [formData, setFormData] = React.useState<any>({
     Bc_Barn: '',
     Bc_RequestedHatchDate: '',
@@ -88,16 +91,16 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   }
 
   const calculate19WeekDate = () => {
-  const date = new Date();
-  date.setDate(date.getDate() + (19 * 7)); 
-  return formatDate(date);
-};
+    const date = new Date();
+    date.setDate(date.getDate() + (19 * 7));
+    return formatDate(date);
+  };
 
-const calculate72WeekDate = () => {
-  const date = new Date();
-  date.setDate(date.getDate() + (72 * 7)); 
-  return formatDate(date);
-};
+  const calculate72WeekDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + (72 * 7));
+    return formatDate(date);
+  };
   async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
     setpremiseIdSelected(e.target.value);
     setepuAddressSelected(e.target.name);
@@ -132,73 +135,57 @@ const calculate72WeekDate = () => {
     return true;
   };
 
-const openAddPopup = () => {
-  setFormStatus('submitting');
-  setEditId(null);
+  const openAddPopup = () => {
+    setFormStatus('submitting');
+    setEditId(null);
 
-  setFormData({
-    Bc_Barn: '',
-    Bc_RequestedHatchDate: calculate19WeekDate(),   
-    Bc_OfChicksOrdered: '',
-    Bc_ProductionType: '',
-    Bc_HousingSystem: '',
-    Bc_EstimateRemovalDate: calculate72WeekDate(),  
-    Bc_RequestedRemovalDate: ''
-  });
+    setFormData({
+      Bc_Barn: '',
+      Bc_RequestedHatchDate: calculate19WeekDate(),
+      Bc_OfChicksOrdered: '',
+      Bc_ProductionType: '',
+      Bc_HousingSystem: '',
+      Bc_EstimateRemovalDate: calculate72WeekDate(),
+      Bc_RequestedRemovalDate: ''
+    });
 
-  setpopup(true);
-};
-const openEditPopup = (item: any) => {
-  setFormStatus('editing');
-  setEditId(item.id);
+    setpopup(true);
+  };
+  const openEditPopup = (item: any, id: any) => {
+    setFormStatus('editing');
+    setEditId(item.id);
+    setformoneId(item?.ID ?? id);
 
-  const hatchDate = item.Bc_RequestedHatchDate
-    ? item.Bc_RequestedHatchDate.split('T')[0]
-    : '';
+    const hatchDate = item.Bc_RequestedHatchDate
+      ? item.Bc_RequestedHatchDate.split('T')[0]
+      : '';
 
-  const removalDate = item.Bc_RequestedRemovalDate
-    ? item.Bc_RequestedRemovalDate.split('T')[0]
-    : '';
+    const removalDate = item.Bc_RequestedRemovalDate
+      ? item.Bc_RequestedRemovalDate.split('T')[0]
+      : '';
 
-  setFormData({
-    Bc_Barn: item.Bc_Barn,
-    Bc_RequestedHatchDate: hatchDate,
-    Bc_OfChicksOrdered: item.Bc_OfChicksOrdered,
-    Bc_ProductionType: item.Bc_ProductionType,
-    Bc_HousingSystem: item.Bc_HousingSystem,
-    Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
-    Bc_RequestedRemovalDate: removalDate
-  });
+    setFormData({
+      Bc_Barn: item.Bc_Barn,
+      Bc_RequestedHatchDate: hatchDate,
+      Bc_OfChicksOrdered: item.Bc_OfChicksOrdered,
+      Bc_ProductionType: item.Bc_ProductionType,
+      Bc_HousingSystem: item.Bc_HousingSystem,
+      Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
+      Bc_RequestedRemovalDate: removalDate
+    });
 
-  if (hatchDate) {
-    setoneNineWeekDate(
-      formatDate(CPPService.calculateWeekOneNineDate(hatchDate))
-    );
+    if (hatchDate) {
+      setoneNineWeekDate(
+        formatDate(CPPService.calculateWeekOneNineDate(hatchDate))
+      );
 
-    setsevenTwoWeekDate(
-      formatDate(CPPService.calculateWeekSevenTwoDate(hatchDate))
-    );
-  }
+      setsevenTwoWeekDate(
+        formatDate(CPPService.calculateWeekSevenTwoDate(hatchDate))
+      );
+    }
 
-  setpopup(true);
-};
-
-  // const openEditPopup = (item: any) => {
-  //   setFormStatus('editing');
-  //   setEditId(item.id);
-
-  //   setFormData({
-  //     Bc_Barn: item.Bc_Barn,
-  //     Bc_RequestedHatchDate: item.Bc_RequestedHatchDate,
-  //     Bc_OfChicksOrdered: item.Bc_OfChicksOrdered,
-  //     Bc_ProductionType: item.Bc_ProductionType,
-  //     Bc_HousingSystem: item.Bc_HousingSystem,
-  //     Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
-  //     Bc_RequestedRemovalDate: item.Bc_RequestedRemovalDate
-  //   });
-
-  //   setpopup(true);
-  // };
+    setpopup(true);
+  };
 
   const producerOnChange = async (producerNumber: string) => {
     const producerpremises = await api.filterListItems(
@@ -239,7 +226,6 @@ const openEditPopup = (item: any) => {
 
   const insertRowTemp = () => {
     if (!validateForm()) return;
-
     const negativeIdCount = BarnTable.filter((i: any) => i.id < 0).length;
     const negatedMaxId = -(negativeIdCount + 1);
 
@@ -252,96 +238,156 @@ const openEditPopup = (item: any) => {
     setpopup(false);
   };
 
-  const updatingFormTemp = () => {
+const updatingFormTemp = async () => {
+  try {
     if (!validateForm()) return;
 
-    const updated = BarnTable.map((item: any) =>
-      item.id === editId ? { ...item, ...formData } : item
+    // ================= TEMP UPDATE =================
+    if (Number(formoneId) < 0) {
+
+      const updatedTable = BarnTable.map((item: any) =>
+        Number(item.id) === Number(formoneId)
+          ? { ...item, ...formData }
+          : item
+      );
+
+      setBarnTable(updatedTable);
+
+      alert(alerts.SuccessFullyupdated);
+      setpopup(false);
+      return;
+
+    }
+
+    // ================= SHAREPOINT UPDATE =================
+    let payload = TransactionService.ProducerBarnFormpayload(
+      formData,
+      formoneId
     );
 
-    setBarnTable(updated);
+    await api.updateRecord(
+      formoneId,
+      listNames.ProducerBarn,
+      payload
+    );
 
-        alert(alerts.SuccessFullyupdated);
-    alert(alerts.SuccessFullySubmited);
+    const savedRows = await getPendingBarns();
+    const tempRows = BarnTable.filter((tb: any) => tb.id < 0);
+
+    const normalizedSavedRows = savedRows.map((item: any) => {
+
+      const existing = tempRows.find(
+        (tb: any) =>
+          Number(tb.id) === Number(item.bcegg_CppRequestId?.ID)
+      );
+
+      return {
+        ...item,
+        ...(existing || {})
+      };
+    });
+
+    setBarnTable([...normalizedSavedRows, ...tempRows]);
+
+    alert(alerts.SuccessFullyupdated);
     setpopup(false);
-  };
 
-    const handleAllCancel = () => {
+  } catch (error) {
+    console.error("Update Error:", error);
+  }
+};
+console.log(editId)
+
+  const handleAllCancel = () => {
     window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
   };
   const submitCPPForm = async () => {
-    let recordId = await api.insertRecord(listNames.CPPRequests, {
-      bcegg_producerIdId: producerkey,
-      bcegg_hatchery: hatcherySelected,
-      bcegg_pulletGrower: pulletGrowerSelected,
-      bcegg_status: status.PendingApproval,
-      bcegg_premiseId: premiseIdSelected,
-      bcegg_epuAddress: epuAddressSelected
-    });
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
 
-    BarnTable.forEach(async (barnTable: any) => {
-      await api.insertRecord(listNames.ProducerBarn, {
-        bcegg_CppRequestIdId: recordId,
-        Bc_Barn: barnTable.Bc_Barn,
-        Bc_RequestedHatchDate: barnTable.Bc_RequestedHatchDate,
-        Bc_OfChicksOrdered: barnTable.Bc_OfChicksOrdered,
-        Bc_ProductionType: barnTable.Bc_ProductionType,
-        Bc_HousingSystem: barnTable.Bc_HousingSystem,
-        Bc_EstimateRemovalDate: formatDate(CPPService.calculateWeekSevenTwoDate(barnTable.Bc_RequestedHatchDate)),
-        Bc_RequestedRemovalDate: barnTable.Bc_RequestedRemovalDate,
-        bcegg_19WeekDate: formatDate(CPPService.calculateWeekOneNineDate(barnTable.Bc_RequestedHatchDate))
+      let obj = {
+        producerkey,
+        hatcherySelected,
+        pulletGrowerSelected,
+        premiseIdSelected,
+        epuAddressSelected
+      }
+      const tempItems = BarnTable.filter((tb: any) => tb.id < 0);
+      console.log('Items to Submit:', tempItems);
+      if (!tempItems.length) {
+        alert(alerts.CppNotransactions);
+        return;
+      }
 
-      });
-    });
+      let CPPPayload = TransactionService.CPPRequestsFormpayload(status.PendingApproval, obj);
+      let recordId = await api.insertRecord(listNames.CPPRequests, CPPPayload);
+      const tempRows = BarnTable.filter((item: any) => item.id < 0);
 
-          alert(alerts.SuccessFullySubmited);
-           window.location.reload();
-    
-  }
+      for (const barnTable of tempRows) {
+        let barnPayload =
+          TransactionService.ProducerBarnFormpayload(barnTable, recordId);
+        await api.insertRecord(listNames.ProducerBarn, barnPayload);
+      }
 
- const getPendingBarns = async () => {
-  try {
-    const itemsbarn = await api.filterListItemsWithExpand(
-      listNames.ProducerBarn,
-      ``,
-      '*,bcegg_CppRequestId/ID',
-      'bcegg_CppRequestId'
-    );
-
-    if (itemsbarn.length === 0) {
+      alert(alerts.SuccessFullySubmited);
       setBarnTable([]);
-      return;
+      window.location.reload();
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    let cppIds: number[] = [];
-
-    for (let item of itemsbarn) {
-      const data = await api.filterListItemsWithExpand(
-        listNames.CPPRequests,
-        `bcegg_status eq '${status.PendingApproval}' and ID eq ${item?.bcegg_CppRequestId?.ID}`,
-        'ID',
-        ''
+  const getPendingBarns = async (): Promise<any> => {
+    try {
+      const itemsbarn = await api.filterListItemsWithExpand(
+        listNames.ProducerBarn,
+        ``,
+        '*,bcegg_CppRequestId/ID',
+        'bcegg_CppRequestId'
       );
 
-      if (data.length > 0) {
-        cppIds.push(item?.bcegg_CppRequestId?.ID);
+      if (itemsbarn.length === 0) {
+        setBarnTable([]);
+        return;
       }
+
+      let cppIds: number[] = [];
+
+      for (let item of itemsbarn) {
+        const data = await api.filterListItemsWithExpand(
+          listNames.CPPRequests,
+          `bcegg_status eq '${status.PendingApproval}' and ID eq ${item?.bcegg_CppRequestId?.ID}`,
+          'ID',
+          ''
+        );
+
+        if (data.length > 0) {
+          cppIds.push(item?.bcegg_CppRequestId?.ID);
+        }
+      }
+
+      console.log("Matched CPP IDs:", cppIds);
+
+      const filteredBarns = itemsbarn.filter((item: any) =>
+        cppIds.includes(item?.bcegg_CppRequestId?.ID)
+      );
+
+      console.log("Final Barn Data:", filteredBarns);
+
+      setBarnTable(filteredBarns);
+
+      return filteredBarns
+
+    } catch (err) {
+      console.error("Error fetching barns:", err);
     }
+  };
 
-    console.log("Matched CPP IDs:", cppIds);
 
-    const filteredBarns = itemsbarn.filter((item: any) =>
-      cppIds.includes(item?.bcegg_CppRequestId?.ID)
-    );
-
-    console.log("Final Barn Data:", filteredBarns);
-
-    setBarnTable(filteredBarns);
-
-  } catch (err) {
-    console.error("Error fetching barns:", err);
-  }
-};
 
   return (
     <section className={`${styles.cppApplication} ${hasTeamsContext ? styles.teams : ''}`}>
@@ -395,9 +441,9 @@ const openEditPopup = (item: any) => {
                 </div>
                 <div className="form-group">
                   <label>Housing System <span>*</span></label>
-                  <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/>
+                  {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange} /> */}
                   {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/> */}
-                  {/* <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
+                  <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
                     <option value="">Select</option>
                     <option value="Conventional">Conventional</option>
                     <option value="Enriched">Enriched</option>
@@ -405,7 +451,7 @@ const openEditPopup = (item: any) => {
                     <option value="Free Range">Free Range</option>
                     <option value="Organic">Organic</option>
                     <option value="Aviary / Floor">Aviary / Floor</option>
-                  </select> */}
+                  </select>
                 </div>
               </div>
               <div className="form-row">
@@ -531,7 +577,7 @@ const openEditPopup = (item: any) => {
                     <td>
                       <div className="actions">
                         <span className="delete"><img src={deleteicon} /></span>
-                        <span className="edit" onClick={() => openEditPopup(item)}>
+                        <span className="edit" onClick={() => openEditPopup(item, item.id)}>
                           <img src={editicon} />
                         </span>
                       </div>
