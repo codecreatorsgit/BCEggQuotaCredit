@@ -62,10 +62,10 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
       setHatcheries(hatcheries);
       setProducers(producers);
-      setproducerkey(producers?.[0]?.Title);
+      setproducerkey(producers?.[0]?.ID);
       await producerOnChange(producers?.[0]?.Title);
       setpulletGrowerSelected("Self Grown");
-      sethatcherySelected(hatcheries[0].Title);
+      sethatcherySelected(hatcheries[0].field_4);
     };
 
     loadInit();
@@ -505,7 +505,7 @@ console.log(editId)
             <select value={producerkey} onChange={(e) => filterbyProducer(e)}>
               <option disabled selected>Select Producer</option>
               {Producers?.map((item: any) => (
-                <option value={item?.ID}>{item?.Producer}</option>
+                <option value={item?.Title}>{item?.Producer}</option>
               ))}
             </select>
           </div>
