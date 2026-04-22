@@ -16,8 +16,9 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [popup, setpopup] = React.useState(false);
   const [enableEndDate, setEnableEndDate] = React.useState(false);
+
   const [producerkey, setproducerkey] = React.useState<any>('');
-  const [, setproducerNoSelected] = React.useState<any>('');
+  const [producerNoSelected, setproducerNoSelected] = React.useState<any>('');
   const [pulletGrowerSelected, setpulletGrowerSelected] = React.useState<any>('');
   const [epuAddressSelected, setepuAddressSelected] = React.useState<any>('');
   const [hatcherySelected, sethatcherySelected] = React.useState<any>('');
@@ -47,7 +48,6 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   });
 
   const api = React.useMemo(() => new ApiService(props.context), [props.context]);
-  const cppClass = React.useMemo(() => new CPPService(props.context), [props.context]);
 
   React.useEffect(() => {
     const loadInit = async () => {
@@ -67,14 +67,14 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       setHatcheries(hatcheries);
       setProducers(producers);
       setproducerkey(producers?.[0]?.ID);
+      // setproducerkey(producers?.[0]?.Title);
       await producerOnChange(producers?.[0]?.Title);
       setpulletGrowerSelected("Self Grown");
-      sethatcherySelected(hatcheries[0].field_4);
-      getPendingBarns(producers?.[0]?.ID);
-
+      sethatcherySelected(hatcheries[0].Title);
     };
 
     loadInit();
+    getPendingBarns()
   }, []);
 
   const handleChange = (e: any) => {
@@ -99,17 +99,42 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
     const producerNumber = selectedProducer.Title;
     const filtering = selectedProducer.FarmName;
-    
 
+    // 1️⃣ update selected producer name
     setproducerNoSelected(producerNumber);
 
+    // 2️⃣ TABLE FILTER (new working logic)
     await getPendingBarns(selectedId);
+
+    // 3️⃣ OLD LOGIC (still needed for EPU, barns, pullet growers etc.)
     await producerOnChange(producerNumber);
 
     console.log("Selected Producer:", producerNumber);
     console.log("Farm Filter:", filtering);
   }
 
+  // async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
+  //   setproducerkey(e.target.value);
+  //   let producerNumber = Producers.find((x: { ID: Number; }) => { return x.ID === Number(e.target.value) }).Title
+  //   let filtering = Producers.find((x: { ID: Number; }) => { return x.ID === Number(e.target.value) }).FarmName
+  //  let barntablef = await getPendingBarns(filtering)
+  //  console.log(barntablef)
+  //   setproducerNoSelected(producerNumber);
+  //   console.log(producerNoSelected)
+  //   await producerOnChange(producerNumber);
+  // }
+  // async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
+  //   const selectedId = Number(e.target.value);
+  //   setproducerkey(selectedId);
+  //   const selectedProducer = Producers.find(
+  //     (x: any) => x.ID === selectedId
+  //   );
+  //   if (!selectedProducer) return;
+  //   setproducerNoSelected(selectedProducer.Title);
+  //  await getPendingBarns(selectedId);
+  // }
+  console.log(producerNoSelected)
+ 
   async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
     setpremiseIdSelected(e.target.value);
     setepuAddressSelected(e.target.name);
@@ -147,11 +172,10 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setFormStatus('submitting');
     setEditId(null);
     setEnableEndDate(false);
-    setEnableEndDate(false);
 
     setFormData({
       Bc_Barn: '',
-      Bc_RequestedHatchDate: '',
+      Bc_RequestedHatchDate:'',
       Bc_OfChicksOrdered: '',
       Bc_ProductionType: '',
       Bc_HousingSystem: '',
@@ -367,29 +391,90 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       setIsSubmitting(false);
     }
   };
-
   const getPendingBarns = async (producerId?: number): Promise<any> => {
     try {
+
+      let cppFilter = `bcegg_status eq '${status.PendingApproval}'`;
       if (producerId) {
-        let cppItems: any = await cppClass.fetchPendingRequests(producerId)
-        if (!cppItems.length) {
-          setBarnTable([]);
-          return;
-        }
-        const cppIds = cppItems.map((item: any) => item.ID);
-        const itemsbarn = await cppClass.fetchPendingApprovalBarns(cppIds);
-
-        console.log("Final Barn Data:", itemsbarn);
-
-        setBarnTable([...itemsbarn]);
-        return itemsbarn;
+        cppFilter += ` and bcegg_producerId/Id eq ${producerId}`;
       }
+      const cppItems = await api.filterListItemsWithExpand(
+        listNames.CPPRequests,
+        cppFilter,
+        'ID,bcegg_producerId/Id',
+        'bcegg_producerId'
+      );
+      if (!cppItems.length) {
+        setBarnTable([]);
+        return;
+      }
+      const cppIds = cppItems.map((item: any) => item.ID);
+      const barnFilter = cppIds
+        .map((id: number) => `bcegg_CppRequestId/Id eq ${id}`)
+        .join(" or ");
+
+      const itemsbarn = await api.filterListItemsWithExpand(
+        listNames.ProducerBarn,
+        barnFilter,
+        '*,bcegg_CppRequestId/Id',
+        'bcegg_CppRequestId'
+      );
+
+      console.log("Final Barn Data:", itemsbarn);
+
+      setBarnTable([...itemsbarn]);
+      return itemsbarn;
 
     } catch (err) {
       console.error(err);
     }
   };
+  // const getPendingBarns = async (filter?:string): Promise<any> => {
+  //   try {
+  //     let isFilter = filter ? `bcegg_producerId/Title eq '${filter}'`: ''
+  //     const itemsbarn = await api.filterListItemsWithExpand(
+  //       listNames.ProducerBarn,
+  //      '',
+  //       '*,bcegg_CppRequestId/ID',
+  //       'bcegg_CppRequestId'
+  //     );
 
+  //     if (itemsbarn.length === 0) {
+  //       setBarnTable([]);
+  //       return;
+  //     }
+
+  //     let cppIds: number[] = [];
+
+  //     for (let item of itemsbarn) {
+  //       const data = await api.filterListItemsWithExpand(
+  //         listNames.CPPRequests,
+  //         `${isFilter !== '' ? `${isFilter} and bcegg_status eq '${status.PendingApproval}' and ID eq ${item?.bcegg_CppRequestId?.ID} ` : `bcegg_status eq '${status.PendingApproval}' and ID eq ${item?.bcegg_CppRequestId?.ID}`}`,
+  //         '*,bcegg_producerId/ID,bcegg_producerId/Title,ID',
+  //         'bcegg_producerId'
+  //       );
+
+  //       if (data.length > 0) {
+  //         cppIds.push(item?.bcegg_CppRequestId?.ID);
+  //       }
+  //     }
+
+  //     console.log("Matched CPP IDs:", cppIds);
+
+  //     const filteredBarns = itemsbarn.filter((item: any) =>
+  //       cppIds.includes(item?.bcegg_CppRequestId?.ID)
+  //     );
+
+  //     console.log("Final Barn Data:", filteredBarns);
+
+  //     setBarnTable(filteredBarns);
+
+  //     return filteredBarns
+
+  //   } catch (err) {
+  //     console.error("Error fetching barns:", err);
+  //   }
+  // };
 
   const deletingitem = async (item: any, id: any) => {
     try {
@@ -494,7 +579,6 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                     onChange={handleChange}
                   />                </div>
               </div>
-
               <div className="form-row">
                 <div className="quota-form-group checkbox-inline">
                   <label>
