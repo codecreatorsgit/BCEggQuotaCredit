@@ -1,3 +1,4 @@
+import { formatDate } from "../common/utils/helperfunctions";
 import { ApiService } from "../services/apiservices";
 
 export class CPPService {
@@ -35,4 +36,31 @@ export class CPPService {
         return _date;
     };
 
+   static ProducerBarnFormpayload(barnTable: any, recordId: any) {
+      let payload = {
+        bcegg_CppRequestIdId: recordId,
+        Bc_Barn: barnTable.Bc_Barn,
+        Bc_RequestedHatchDate: barnTable.Bc_RequestedHatchDate,
+        Bc_OfChicksOrdered: barnTable.Bc_OfChicksOrdered,
+        Bc_ProductionType: barnTable.Bc_ProductionType,
+        Bc_HousingSystem: barnTable.Bc_HousingSystem,
+        Bc_EstimateRemovalDate: formatDate(CPPService.calculateWeekSevenTwoDate(barnTable.Bc_RequestedHatchDate)),
+        Bc_RequestedRemovalDate: barnTable.Bc_RequestedRemovalDate,
+        bcegg_19WeekDate: formatDate(CPPService.calculateWeekOneNineDate(barnTable.Bc_RequestedHatchDate))
+      }
+      return payload
+    }
+  
+    static CPPRequestsFormpayload(status:any,data:any) {
+      let payload = {
+      bcegg_producerIdId: data.producerkey,
+           bcegg_hatchery: data.hatcherySelected,
+           bcegg_pulletGrower: data.pulletGrowerSelected,
+           bcegg_status: status,
+           bcegg_premiseId: data.premiseIdSelected,
+           bcegg_epuAddress: data.epuAddressSelected
+      }
+      return payload
+    }
+    
 }
