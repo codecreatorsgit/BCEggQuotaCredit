@@ -16,7 +16,6 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [popup, setpopup] = React.useState(false);
   const [enableEndDate, setEnableEndDate] = React.useState(false);
-
   const [producerkey, setproducerkey] = React.useState<any>('');
   const [, setproducerNoSelected] = React.useState<any>('');
   const [pulletGrowerSelected, setpulletGrowerSelected] = React.useState<any>('');
@@ -100,6 +99,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
     const producerNumber = selectedProducer.Title;
     const filtering = selectedProducer.FarmName;
+    
 
     setproducerNoSelected(producerNumber);
 
@@ -146,6 +146,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const openAddPopup = () => {
     setFormStatus('submitting');
     setEditId(null);
+    setEnableEndDate(false);
     setEnableEndDate(false);
 
     setFormData({
