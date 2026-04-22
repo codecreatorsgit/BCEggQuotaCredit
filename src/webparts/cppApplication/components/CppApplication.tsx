@@ -15,14 +15,14 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [popup, setpopup] = React.useState(false);
-    const [enableEndDate, setEnableEndDate] = React.useState(false);
-  
+  const [enableEndDate, setEnableEndDate] = React.useState(false);
+
   const [producerkey, setproducerkey] = React.useState<any>('');
   const [producerNoSelected, setproducerNoSelected] = React.useState<any>('');
   const [pulletGrowerSelected, setpulletGrowerSelected] = React.useState<any>('');
   const [epuAddressSelected, setepuAddressSelected] = React.useState<any>('');
   const [hatcherySelected, sethatcherySelected] = React.useState<any>('');
-const [hatcheryOther, setHatcheryOther] = React.useState<any>('');
+  const [hatcheryOther, setHatcheryOther] = React.useState<any>('');
   const [premiseIdSelected, setpremiseIdSelected] = React.useState<any>('');
   const [Producers, setProducers] = React.useState<any>([]);
   const [BarnTable, setBarnTable] = React.useState<any>([]);
@@ -43,7 +43,7 @@ const [hatcheryOther, setHatcheryOther] = React.useState<any>('');
     Bc_HousingSystem: '',
     Bc_EstimateRemovalDate: '',
     Bc_RequestedRemovalDate: '',
-    Bc_checkbox:false
+    Bc_checkbox: false
 
   });
 
@@ -87,31 +87,31 @@ const [hatcheryOther, setHatcheryOther] = React.useState<any>('');
   };
 
   async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
-  const selectedId = Number(e.target.value);
+    const selectedId = Number(e.target.value);
 
-  setproducerkey(selectedId);
+    setproducerkey(selectedId);
 
-  const selectedProducer = Producers.find(
-    (x: any) => x.ID === selectedId
-  );
+    const selectedProducer = Producers.find(
+      (x: any) => x.ID === selectedId
+    );
 
-  if (!selectedProducer) return;
+    if (!selectedProducer) return;
 
-  const producerNumber = selectedProducer.Title;
-  const filtering = selectedProducer.FarmName;
+    const producerNumber = selectedProducer.Title;
+    const filtering = selectedProducer.FarmName;
 
-  // 1️⃣ update selected producer name
-  setproducerNoSelected(producerNumber);
+    // 1️⃣ update selected producer name
+    setproducerNoSelected(producerNumber);
 
-  // 2️⃣ TABLE FILTER (new working logic)
-  await getPendingBarns(selectedId);
+    // 2️⃣ TABLE FILTER (new working logic)
+    await getPendingBarns(selectedId);
 
-  // 3️⃣ OLD LOGIC (still needed for EPU, barns, pullet growers etc.)
-  await producerOnChange(producerNumber);
+    // 3️⃣ OLD LOGIC (still needed for EPU, barns, pullet growers etc.)
+    await producerOnChange(producerNumber);
 
-  console.log("Selected Producer:", producerNumber);
-  console.log("Farm Filter:", filtering);
-}
+    console.log("Selected Producer:", producerNumber);
+    console.log("Farm Filter:", filtering);
+  }
 
   // async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
   //   setproducerkey(e.target.value);
@@ -123,28 +123,18 @@ const [hatcheryOther, setHatcheryOther] = React.useState<any>('');
   //   console.log(producerNoSelected)
   //   await producerOnChange(producerNumber);
   // }
-// async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
-//   const selectedId = Number(e.target.value);
-//   setproducerkey(selectedId);
-//   const selectedProducer = Producers.find(
-//     (x: any) => x.ID === selectedId
-//   );
-//   if (!selectedProducer) return;
-//   setproducerNoSelected(selectedProducer.Title);
-//  await getPendingBarns(selectedId);
-// }
- console.log(producerNoSelected)
-  const calculate19WeekDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() + (19 * 7));
-    return formatDate(date);
-  };
-
-  const calculate72WeekDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() + (72 * 7));
-    return formatDate(date);
-  };
+  // async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
+  //   const selectedId = Number(e.target.value);
+  //   setproducerkey(selectedId);
+  //   const selectedProducer = Producers.find(
+  //     (x: any) => x.ID === selectedId
+  //   );
+  //   if (!selectedProducer) return;
+  //   setproducerNoSelected(selectedProducer.Title);
+  //  await getPendingBarns(selectedId);
+  // }
+  console.log(producerNoSelected)
+ 
   async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
     setpremiseIdSelected(e.target.value);
     setepuAddressSelected(e.target.name);
@@ -181,70 +171,70 @@ const [hatcheryOther, setHatcheryOther] = React.useState<any>('');
   const openAddPopup = () => {
     setFormStatus('submitting');
     setEditId(null);
-  setEnableEndDate(false); 
+    setEnableEndDate(false);
 
     setFormData({
       Bc_Barn: '',
-      Bc_RequestedHatchDate: calculate19WeekDate(),
+      Bc_RequestedHatchDate:'',
       Bc_OfChicksOrdered: '',
       Bc_ProductionType: '',
       Bc_HousingSystem: '',
-      Bc_EstimateRemovalDate: calculate72WeekDate(),
+      Bc_EstimateRemovalDate: '',
       Bc_RequestedRemovalDate: '',
-      Bc_checkbox:false
+      Bc_checkbox: false
     });
 
     setpopup(true);
   };
-const openEditPopup = (item: any, id: any) => {
-  setFormStatus('editing');
-  setEditId(item.id);
-  setformoneId(item?.ID ?? id);
+  const openEditPopup = (item: any, id: any) => {
+    setFormStatus('editing');
+    setEditId(item.id);
+    setformoneId(item?.ID ?? id);
 
-  const hatchDate = item.Bc_RequestedHatchDate
-    ? item.Bc_RequestedHatchDate.split('T')[0]
-    : '';
+    const hatchDate = item.Bc_RequestedHatchDate
+      ? item.Bc_RequestedHatchDate.split('T')[0]
+      : '';
 
-  const removalDate = item.Bc_RequestedRemovalDate
-    ? item.Bc_RequestedRemovalDate.split('T')[0]
-    : '';
+    const removalDate = item.Bc_RequestedRemovalDate
+      ? item.Bc_RequestedRemovalDate.split('T')[0]
+      : '';
 
-  // ================= FIX ADDED (NO REMOVAL) =================
-  const existing = BarnTable.some(
-    (tb: any) => tb?.ID === item?.ID && item?.Bc_checkbox === true
-  );
-
-  const temp = BarnTable.find(
-    (tb: any) => tb?.id === id && item?.Bc_checkbox === true
-  );
-
-const checkboxValue = temp?.Bc_checkbox ?? item?.Bc_checkbox ?? existing ?? false;
-
-  setFormData({
-    Bc_Barn: item.Bc_Barn,
-    Bc_RequestedHatchDate: hatchDate,
-    Bc_OfChicksOrdered: item.Bc_OfChicksOrdered,
-    Bc_ProductionType: item.Bc_ProductionType,
-    Bc_HousingSystem: item.Bc_HousingSystem,
-    Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
-    Bc_RequestedRemovalDate: removalDate,
-
-    Bc_checkbox: checkboxValue
-  });
-  setEnableEndDate(checkboxValue === true);
-
-  if (hatchDate) {
-    setoneNineWeekDate(
-      formatDate(CPPService.calculateWeekOneNineDate(hatchDate))
+    // ================= FIX ADDED (NO REMOVAL) =================
+    const existing = BarnTable.some(
+      (tb: any) => tb?.ID === item?.ID && item?.Bc_checkbox === true
     );
 
-    setsevenTwoWeekDate(
-      formatDate(CPPService.calculateWeekSevenTwoDate(hatchDate))
+    const temp = BarnTable.find(
+      (tb: any) => tb?.id === id && item?.Bc_checkbox === true
     );
-  }
 
-  setpopup(true);
-};
+    const checkboxValue = temp?.Bc_checkbox ?? item?.Bc_checkbox ?? existing ?? false;
+
+    setFormData({
+      Bc_Barn: item.Bc_Barn,
+      Bc_RequestedHatchDate: hatchDate,
+      Bc_OfChicksOrdered: item.Bc_OfChicksOrdered,
+      Bc_ProductionType: item.Bc_ProductionType,
+      Bc_HousingSystem: item.Bc_HousingSystem,
+      Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
+      Bc_RequestedRemovalDate: removalDate,
+
+      Bc_checkbox: checkboxValue
+    });
+    setEnableEndDate(checkboxValue === true);
+
+    if (hatchDate) {
+      setoneNineWeekDate(
+        formatDate(CPPService.calculateWeekOneNineDate(hatchDate))
+      );
+
+      setsevenTwoWeekDate(
+        formatDate(CPPService.calculateWeekSevenTwoDate(hatchDate))
+      );
+    }
+
+    setpopup(true);
+  };
 
   const producerOnChange = async (producerNumber: string) => {
     const producerpremises = await api.filterListItems(
@@ -297,66 +287,66 @@ const checkboxValue = temp?.Bc_checkbox ?? item?.Bc_checkbox ?? existing ?? fals
     setpopup(false);
   };
 
-const updatingFormTemp = async () => {
-  try {
-    if (!validateForm()) return;
+  const updatingFormTemp = async () => {
+    try {
+      if (!validateForm()) return;
 
-    // ================= TEMP UPDATE =================
-    if (Number(formoneId) < 0) {
+      // ================= TEMP UPDATE =================
+      if (Number(formoneId) < 0) {
 
-      const updatedTable = BarnTable.map((item: any) =>
-        Number(item.id) === Number(formoneId)
-          ? { ...item, ...formData }
-          : item
+        const updatedTable = BarnTable.map((item: any) =>
+          Number(item.id) === Number(formoneId)
+            ? { ...item, ...formData }
+            : item
+        );
+
+        setBarnTable(updatedTable);
+
+        alert(alerts.SuccessFullyupdated);
+        setpopup(false);
+        return;
+
+      }
+
+      // ================= SHAREPOINT UPDATE =================
+      let payload = CPPService.ProducerBarnFormpayload(
+        formData,
+        formoneId
       );
 
-      setBarnTable(updatedTable);
+      await api.updateRecord(
+        formoneId,
+        listNames.ProducerBarn,
+        payload
+      );
+
+      const savedRows = await getPendingBarns();
+      const tempRows = BarnTable.filter((tb: any) => tb.id < 0);
+
+      const normalizedSavedRows = savedRows.map((item: any) => {
+
+        const existing = tempRows.find(
+          (tb: any) =>
+            Number(tb.id) === Number(item.bcegg_CppRequestId?.ID)
+        );
+
+        return {
+          ...item,
+          ...(existing || {}),
+          Bc_checkbox: existing?.Bc_checkbox ?? item?.Bc_checkbox ?? false
+        };
+      });
+
+      setBarnTable([...normalizedSavedRows, ...tempRows]);
 
       alert(alerts.SuccessFullyupdated);
       setpopup(false);
-      return;
 
+    } catch (error) {
+      console.error("Update Error:", error);
     }
-
-    // ================= SHAREPOINT UPDATE =================
-    let payload = CPPService.ProducerBarnFormpayload(
-      formData,
-      formoneId
-    );
-
-    await api.updateRecord(
-      formoneId,
-      listNames.ProducerBarn,
-      payload
-    );
-
-    const savedRows = await getPendingBarns();
-    const tempRows = BarnTable.filter((tb: any) => tb.id < 0);
-
-    const normalizedSavedRows = savedRows.map((item: any) => {
-
-      const existing = tempRows.find(
-        (tb: any) =>
-          Number(tb.id) === Number(item.bcegg_CppRequestId?.ID)
-      );
-
-    return {
-  ...item,
-  ...(existing || {}),
-  Bc_checkbox: existing?.Bc_checkbox ?? item?.Bc_checkbox ?? false
-};
-    });
-
-    setBarnTable([...normalizedSavedRows, ...tempRows]);
-
-    alert(alerts.SuccessFullyupdated);
-    setpopup(false);
-
-  } catch (error) {
-    console.error("Update Error:", error);
-  }
-};
-console.log(editId)
+  };
+  console.log(editId)
 
   const handleAllCancel = () => {
     window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
@@ -369,7 +359,7 @@ console.log(editId)
       let obj = {
         producerId: producerkey,
         producerkey,
-  hatcherySelected: hatcherySelected === "Other" ? hatcheryOther : hatcherySelected,
+        hatcherySelected: hatcherySelected === "Other" ? hatcheryOther : hatcherySelected,
         pulletGrowerSelected,
         premiseIdSelected,
         epuAddressSelected
@@ -401,44 +391,44 @@ console.log(editId)
       setIsSubmitting(false);
     }
   };
-const getPendingBarns = async (producerId?: number): Promise<any> => {
-  try {
+  const getPendingBarns = async (producerId?: number): Promise<any> => {
+    try {
 
-    let cppFilter = `bcegg_status eq '${status.PendingApproval}'`;
-    if (producerId) {
-      cppFilter += ` and bcegg_producerId/Id eq ${producerId}`;
+      let cppFilter = `bcegg_status eq '${status.PendingApproval}'`;
+      if (producerId) {
+        cppFilter += ` and bcegg_producerId/Id eq ${producerId}`;
+      }
+      const cppItems = await api.filterListItemsWithExpand(
+        listNames.CPPRequests,
+        cppFilter,
+        'ID,bcegg_producerId/Id',
+        'bcegg_producerId'
+      );
+      if (!cppItems.length) {
+        setBarnTable([]);
+        return;
+      }
+      const cppIds = cppItems.map((item: any) => item.ID);
+      const barnFilter = cppIds
+        .map((id: number) => `bcegg_CppRequestId/Id eq ${id}`)
+        .join(" or ");
+
+      const itemsbarn = await api.filterListItemsWithExpand(
+        listNames.ProducerBarn,
+        barnFilter,
+        '*,bcegg_CppRequestId/Id',
+        'bcegg_CppRequestId'
+      );
+
+      console.log("Final Barn Data:", itemsbarn);
+
+      setBarnTable([...itemsbarn]);
+      return itemsbarn;
+
+    } catch (err) {
+      console.error(err);
     }
-    const cppItems = await api.filterListItemsWithExpand(
-      listNames.CPPRequests,
-      cppFilter,
-      'ID,bcegg_producerId/Id',
-      'bcegg_producerId'
-    );
-    if (!cppItems.length) {
-      setBarnTable([]);
-      return;
-    }
-    const cppIds = cppItems.map((item: any) => item.ID);
-    const barnFilter = cppIds
-      .map((id: number) => `bcegg_CppRequestId/Id eq ${id}`)
-      .join(" or ");
-
-    const itemsbarn = await api.filterListItemsWithExpand(
-      listNames.ProducerBarn,
-      barnFilter,
-      '*,bcegg_CppRequestId/Id',
-      'bcegg_CppRequestId'
-    );
-
-    console.log("Final Barn Data:", itemsbarn);
-
-    setBarnTable([...itemsbarn]);
-    return itemsbarn;
-
-  } catch (err) {
-    console.error(err);
-  }
-};
+  };
   // const getPendingBarns = async (filter?:string): Promise<any> => {
   //   try {
   //     let isFilter = filter ? `bcegg_producerId/Title eq '${filter}'`: ''
@@ -581,39 +571,35 @@ const getPendingBarns = async (producerId?: number): Promise<any> => {
                 </div>
                 <div className="form-group">
                   <label>Requested Removal Date <span></span></label>
-<input 
-  type="date" 
-  name="Bc_RequestedRemovalDate" 
-  disabled={enableEndDate ? false : true} 
-  value={formData.Bc_RequestedRemovalDate} 
-  onChange={handleChange} 
-/>                </div>
+                  <input
+                    type="date"
+                    name="Bc_RequestedRemovalDate"
+                    disabled={enableEndDate ? false : true}
+                    value={formData.Bc_RequestedRemovalDate}
+                    onChange={handleChange}
+                  />                </div>
               </div>
-
-
-
-
-            <div className="form-row">
-  <div className="quota-form-group checkbox-inline">
-    <label>
-      <input
-        type="checkbox"
-        checked={formData.Bc_checkbox}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          setEnableEndDate(checked);
-          setFormData((prev: any) => ({
-            ...prev,
-            Bc_checkbox: checked
-          }));
-        }}
-      />
-      <span className="different-date">
-        I would like to pick a Requested Removal Date
-      </span>
-    </label>
-  </div>
-</div>
+              <div className="form-row">
+                <div className="quota-form-group checkbox-inline">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.Bc_checkbox}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setEnableEndDate(checked);
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          Bc_checkbox: checked
+                        }));
+                      }}
+                    />
+                    <span className="different-date">
+                      I would like to pick a Requested Removal Date
+                    </span>
+                  </label>
+                </div>
+              </div>
 
               <div className="modal-actions">
                 <button className="btn-cancel" onClick={() => setpopup(false)}>
@@ -688,7 +674,7 @@ const getPendingBarns = async (producerId?: number): Promise<any> => {
                 ))}
               </select>
               {/* <input type='text' value={hatcheryOther} hidden={hatcherySelected != "Other"}></input> */}
-              <input type='text'   value={hatcheryOther} onChange={(e) => setHatcheryOther(e.target.value)} hidden={hatcherySelected != "Other"} />
+              <input type='text' value={hatcheryOther} onChange={(e) => setHatcheryOther(e.target.value)} hidden={hatcherySelected != "Other"} />
             </div>
           </div>
         </div>
