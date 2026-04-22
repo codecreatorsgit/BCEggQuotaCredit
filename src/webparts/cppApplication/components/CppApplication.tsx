@@ -81,8 +81,11 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
     if (name === "Bc_RequestedHatchDate") {
-      setoneNineWeekDate(formatDate(CPPService.calculateWeekOneNineDate(value)))
-      setsevenTwoWeekDate(formatDate(CPPService.calculateWeekSevenTwoDate(value)))
+      let week19Date=formatDate(CPPService.calculateWeekOneNineDate(value));
+       let week72Date=formatDate(CPPService.calculateWeekSevenTwoDate(value));
+      setoneNineWeekDate(week19Date);
+      setsevenTwoWeekDate(week72Date);
+      formData.Bc_EstimateRemovalDate=week72Date;
     }
   };
 
@@ -551,8 +554,6 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                 </div>
                 <div className="form-group">
                   <label>Housing System <span>*</span></label>
-                  {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange} /> */}
-                  {/* <input type="text" name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}/> */}
                   <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
                     <option value="">Select</option>
                     <option value="Conventional">Conventional</option>
