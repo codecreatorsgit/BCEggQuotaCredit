@@ -42,6 +42,7 @@ export class CPPService {
         Bc_Barn: barnTable.Bc_Barn,
         Bc_RequestedHatchDate: barnTable.Bc_RequestedHatchDate,
         Bc_OfChicksOrdered: barnTable.Bc_OfChicksOrdered,
+        Bc_checkbox: barnTable.Bc_checkbox,
         Bc_ProductionType: barnTable.Bc_ProductionType,
         Bc_HousingSystem: barnTable.Bc_HousingSystem,
         Bc_EstimateRemovalDate: formatDate(CPPService.calculateWeekSevenTwoDate(barnTable.Bc_RequestedHatchDate)),
@@ -58,7 +59,7 @@ export class CPPService {
            bcegg_pulletGrower: data.pulletGrowerSelected,
            bcegg_status: status,
            bcegg_premiseId: data.premiseIdSelected,
-           bcegg_epuAddress: data.epuAddressSelected
+           bcegg_epuAddress: data.epuAddressSelected,
       }
       return payload
     }

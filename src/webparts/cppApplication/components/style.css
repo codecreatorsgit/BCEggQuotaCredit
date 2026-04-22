@@ -211,7 +211,30 @@ input[type="number"]::-webkit-outer-spin-button{
     font-weight:600;
     margin-bottom:28px;
 }
+/* ================= CHECKBOX FIX ================= */
 
+.quota-form-group.checkbox-inline label {
+    display: flex !important;     
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    margin-bottom: 0;             
+}
+
+.quota-form-group.checkbox-inline input[type="checkbox"] {
+     accent-color: #ff9800;
+    cursor: pointer;
+    height: 24px;
+    margin-right: 8px;
+    width: 24px;
+}
+
+.quota-form-group.checkbox-inline .different-date {
+    font-size: 15px;
+    font-weight: 500;
+    color: #000000;                
+    line-height: 1.2;
+}
 /* ================= FORM ================= */
 .form-row{
     display:flex;
