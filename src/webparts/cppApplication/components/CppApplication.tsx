@@ -16,9 +16,8 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [popup, setpopup] = React.useState(false);
   const [enableEndDate, setEnableEndDate] = React.useState(false);
-
   const [producerkey, setproducerkey] = React.useState<any>('');
-  const [producerNoSelected, setproducerNoSelected] = React.useState<any>('');
+  const [, setproducerNoSelected] = React.useState<any>('');
   const [pulletGrowerSelected, setpulletGrowerSelected] = React.useState<any>('');
   const [epuAddressSelected, setepuAddressSelected] = React.useState<any>('');
   const [hatcherySelected, sethatcherySelected] = React.useState<any>('');
@@ -35,6 +34,9 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const [oneNineWeekDate, setoneNineWeekDate] = React.useState<any>(null);
   const [sevenTwoWeekDate, setsevenTwoWeekDate] = React.useState<any>(null);
   const [formoneId, setformoneId]: any = React.useState(0);
+  const [applicationhistory, setapplicationhistory] = React.useState<any>([])
+  const [applicationH, setapplicationH]: any = React.useState(false);
+
   const [formData, setFormData] = React.useState<any>({
     Bc_Barn: '',
     Bc_RequestedHatchDate: '',
@@ -48,6 +50,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   });
 
   const api = React.useMemo(() => new ApiService(props.context), [props.context]);
+  const cppClass = React.useMemo(() => new CPPService(props.context), [props.context]);
 
   React.useEffect(() => {
     const loadInit = async () => {
@@ -67,25 +70,26 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       setHatcheries(hatcheries);
       setProducers(producers);
       setproducerkey(producers?.[0]?.ID);
-      // setproducerkey(producers?.[0]?.Title);
       await producerOnChange(producers?.[0]?.Title);
       setpulletGrowerSelected("Self Grown");
-      sethatcherySelected(hatcheries[0].Title);
+      sethatcherySelected(hatcheries[0].field_4);
+      getPendingBarns(producers?.[0]?.ID);
+      getApplicationHisory()
+
     };
 
     loadInit();
-    getPendingBarns()
   }, []);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
     if (name === "Bc_RequestedHatchDate") {
-      let week19Date=formatDate(CPPService.calculateWeekOneNineDate(value));
-       let week72Date=formatDate(CPPService.calculateWeekSevenTwoDate(value));
+      let week19Date = formatDate(CPPService.calculateWeekOneNineDate(value));
+      let week72Date = formatDate(CPPService.calculateWeekSevenTwoDate(value));
       setoneNineWeekDate(week19Date);
       setsevenTwoWeekDate(week72Date);
-      formData.Bc_EstimateRemovalDate=week72Date;
+      formData.Bc_EstimateRemovalDate = week72Date;
     }
   };
 
@@ -103,41 +107,16 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     const producerNumber = selectedProducer.Title;
     const filtering = selectedProducer.FarmName;
 
-    // 1️⃣ update selected producer name
+
     setproducerNoSelected(producerNumber);
 
-    // 2️⃣ TABLE FILTER (new working logic)
     await getPendingBarns(selectedId);
-
-    // 3️⃣ OLD LOGIC (still needed for EPU, barns, pullet growers etc.)
     await producerOnChange(producerNumber);
 
     console.log("Selected Producer:", producerNumber);
     console.log("Farm Filter:", filtering);
   }
 
-  // async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
-  //   setproducerkey(e.target.value);
-  //   let producerNumber = Producers.find((x: { ID: Number; }) => { return x.ID === Number(e.target.value) }).Title
-  //   let filtering = Producers.find((x: { ID: Number; }) => { return x.ID === Number(e.target.value) }).FarmName
-  //  let barntablef = await getPendingBarns(filtering)
-  //  console.log(barntablef)
-  //   setproducerNoSelected(producerNumber);
-  //   console.log(producerNoSelected)
-  //   await producerOnChange(producerNumber);
-  // }
-  // async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
-  //   const selectedId = Number(e.target.value);
-  //   setproducerkey(selectedId);
-  //   const selectedProducer = Producers.find(
-  //     (x: any) => x.ID === selectedId
-  //   );
-  //   if (!selectedProducer) return;
-  //   setproducerNoSelected(selectedProducer.Title);
-  //  await getPendingBarns(selectedId);
-  // }
-  console.log(producerNoSelected)
- 
   async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
     setpremiseIdSelected(e.target.value);
     setepuAddressSelected(e.target.name);
@@ -175,10 +154,11 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setFormStatus('submitting');
     setEditId(null);
     setEnableEndDate(false);
+    setEnableEndDate(false);
 
     setFormData({
       Bc_Barn: '',
-      Bc_RequestedHatchDate:'',
+      Bc_RequestedHatchDate: '',
       Bc_OfChicksOrdered: '',
       Bc_ProductionType: '',
       Bc_HousingSystem: '',
@@ -323,7 +303,9 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
         payload
       );
 
-      const savedRows = await getPendingBarns();
+      const savedRows = await getPendingBarns(producerkey);
+          await getApplicationHisory();  
+
       const tempRows = BarnTable.filter((tb: any) => tb.id < 0);
 
       const normalizedSavedRows = savedRows.map((item: any) => {
@@ -394,90 +376,62 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       setIsSubmitting(false);
     }
   };
+
   const getPendingBarns = async (producerId?: number): Promise<any> => {
     try {
-
-      let cppFilter = `bcegg_status eq '${status.PendingApproval}'`;
       if (producerId) {
-        cppFilter += ` and bcegg_producerId/Id eq ${producerId}`;
+        let cppItems: any = await cppClass.fetchPendingRequests(producerId)
+        if (!cppItems.length) {
+          setBarnTable([]);
+          return;
+        }
+        const cppIds = cppItems.map((item: any) => item.ID);
+        const itemsbarn = await cppClass.fetchPendingApprovalBarns(cppIds);
+
+        console.log("Final Barn Data:", itemsbarn);
+
+        setBarnTable([...itemsbarn]);
+        return itemsbarn;
       }
-      const cppItems = await api.filterListItemsWithExpand(
-        listNames.CPPRequests,
-        cppFilter,
-        'ID,bcegg_producerId/Id',
-        'bcegg_producerId'
-      );
-      if (!cppItems.length) {
-        setBarnTable([]);
-        return;
-      }
-      const cppIds = cppItems.map((item: any) => item.ID);
-      const barnFilter = cppIds
-        .map((id: number) => `bcegg_CppRequestId/Id eq ${id}`)
-        .join(" or ");
-
-      const itemsbarn = await api.filterListItemsWithExpand(
-        listNames.ProducerBarn,
-        barnFilter,
-        '*,bcegg_CppRequestId/Id',
-        'bcegg_CppRequestId'
-      );
-
-      console.log("Final Barn Data:", itemsbarn);
-
-      setBarnTable([...itemsbarn]);
-      return itemsbarn;
 
     } catch (err) {
       console.error(err);
     }
   };
-  // const getPendingBarns = async (filter?:string): Promise<any> => {
-  //   try {
-  //     let isFilter = filter ? `bcegg_producerId/Title eq '${filter}'`: ''
-  //     const itemsbarn = await api.filterListItemsWithExpand(
-  //       listNames.ProducerBarn,
-  //      '',
-  //       '*,bcegg_CppRequestId/ID',
-  //       'bcegg_CppRequestId'
-  //     );
 
-  //     if (itemsbarn.length === 0) {
-  //       setBarnTable([]);
-  //       return;
-  //     }
+  const getApplicationHisory = async () => {
+    try {
+      const dataBarn = await api.getListItemsWithExpand(
+        listNames.ProducerBarn,
+        '*,bcegg_CppRequestId/ID,bcegg_CppRequestId/Title',
+        'bcegg_CppRequestId'
+      );
 
-  //     let cppIds: number[] = [];
+      const datappc = await api.getListItems(
+        listNames.CPPRequests,
+        '*'
+      );
 
-  //     for (let item of itemsbarn) {
-  //       const data = await api.filterListItemsWithExpand(
-  //         listNames.CPPRequests,
-  //         `${isFilter !== '' ? `${isFilter} and bcegg_status eq '${status.PendingApproval}' and ID eq ${item?.bcegg_CppRequestId?.ID} ` : `bcegg_status eq '${status.PendingApproval}' and ID eq ${item?.bcegg_CppRequestId?.ID}`}`,
-  //         '*,bcegg_producerId/ID,bcegg_producerId/Title,ID',
-  //         'bcegg_producerId'
-  //       );
+      const setdata = dataBarn?.map((item: any) => {
+        const cpp = datappc?.find(
+          (cp: any) =>
+            Number(item?.bcegg_CppRequestId?.ID) === Number(cp?.ID)
+        );
 
-  //       if (data.length > 0) {
-  //         cppIds.push(item?.bcegg_CppRequestId?.ID);
-  //       }
-  //     }
+        return {
+          ...item,
+          cppRequest: cpp || null
+        };
+      });
 
-  //     console.log("Matched CPP IDs:", cppIds);
+      console.log(setdata)
 
-  //     const filteredBarns = itemsbarn.filter((item: any) =>
-  //       cppIds.includes(item?.bcegg_CppRequestId?.ID)
-  //     );
+      setapplicationhistory(setdata || []);
+    } catch (error) {
+      console.error("getApplicationHisory error:", error);
+    }
+  };
 
-  //     console.log("Final Barn Data:", filteredBarns);
-
-  //     setBarnTable(filteredBarns);
-
-  //     return filteredBarns
-
-  //   } catch (err) {
-  //     console.error("Error fetching barns:", err);
-  //   }
-  // };
 
   const deletingitem = async (item: any, id: any) => {
     try {
@@ -503,232 +457,306 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   };
 
   return (
-    <section className={`${styles.cppApplication} ${hasTeamsContext ? styles.teams : ''}`}>
-      <div className="container">
+    <>
 
-        {/* ================= POPUP ================= */}
-        {popup && (
-          <div className="modal-overlay">
-            <div className="modal-box">
+      <section className={`${styles.cppApplication} ${hasTeamsContext ? styles.teams : ''}`}>
 
-              <h2>{formStatus === 'editing' ? 'Edit Barn' : 'Add Barn'}</h2>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Barn # <span>*</span></label>
-                  <select name="Bc_Barn" value={formData.Bc_Barn} onChange={handleChange}>
-                    <option value="">Select</option>
-                    {barn?.map((item: any) => (
-                      <option value={item?.BarnNumber}>{item?.BarnNumber}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Chicks Ordered <span>*</span></label>
-                  <input type="text" name="Bc_OfChicksOrdered" value={formData.Bc_OfChicksOrdered} onChange={handleChange} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Requested Hatch Date <span>*</span></label>
-                  <input type="date" min={getCurrentDate()} name="Bc_RequestedHatchDate" value={formData.Bc_RequestedHatchDate} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label>19 Week Date <span>*</span></label>
-                  <label>{oneNineWeekDate}</label>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Production Type <span>*</span></label>
-                  <select name="Bc_ProductionType" value={formData.Bc_ProductionType} onChange={handleChange}>
-                    <option value="">Select</option>
-                    <option value="CAWH - Caged White">CAWH</option>
-                    <option value="FABR">FABR</option>
-                    <option value="FNBR">FNBR</option>
-                    <option value="FNWH">FNWH</option>
-                    <option value="ORBR">ORBR</option>
-                    <option value="CABR">CABR</option>
-                    <option value="CAWH - Caged White">CAWH</option>
-                    <option value="ENWH">ENWH</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Housing System <span>*</span></label>
-                  <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
-                    <option value="">Select</option>
-                    <option value="Conventional">Conventional</option>
-                    <option value="Enriched">Enriched</option>
-                    <option value="Free Run">Free Run</option>
-                    <option value="Free Range">Free Range</option>
-                    <option value="Organic">Organic</option>
-                    <option value="Aviary / Floor">Aviary / Floor</option>
-                  </select>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Estimate Removal Date <span>(based on 72 weeks)</span></label>
-                  <input type="date" name="Bc_EstimateRemovalDate" value={sevenTwoWeekDate} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label>Requested Removal Date <span></span></label>
-                  <input
-                    type="date"
-                    name="Bc_RequestedRemovalDate"
-                    disabled={enableEndDate ? false : true}
-                    value={formData.Bc_RequestedRemovalDate}
-                    onChange={handleChange}
-                  />                </div>
-              </div>
-              <div className="form-row">
-                <div className="quota-form-group checkbox-inline">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={formData.Bc_checkbox}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setEnableEndDate(checked);
-                        setFormData((prev: any) => ({
-                          ...prev,
-                          Bc_checkbox: checked
-                        }));
-                      }}
-                    />
-                    <span className="different-date">
-                      I would like to pick a Requested Removal Date
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <button className="btn-cancel" onClick={() => setpopup(false)}>
-                  Cancel
-                </button>
-                <button
-                  className={`btn-save ${formStatus === "editing" ? "updateone" : ""}`}
-                  onClick={formStatus === "submitting" ? insertRowTemp : updatingFormTemp}>
-                  {formStatus === "submitting" ? "Save" : "Update"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================= HEADER (UNCHANGED EXACTLY) ================= */}
-        <div className="header">
-          <div className="form-group">
-            <label>Producer <span>*</span></label>
-            <select value={producerkey} onChange={(e) => filterbyProducer(e)}>
-              <option disabled selected>Select Producer</option>
-              {Producers?.map((item: any) => (
-                <option value={item?.ID}>{item?.Producer}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="header-buttons">
-            <button className="btn-cancel" onClick={handleAllCancel}>Cancel</button>
-            <button className="btn-history">Applications History</button>
-            <button className="btn-submit" onClick={() => submitCPPForm()}>Submit</button>
-          </div>
-        </div>
-
-        <div className="card">
-          <h2>Producer Information</h2>
-
-          <div className="grid-4">
-            <div className="form-group">
-              <label>EPU Address <span>*</span></label>
-              <select onChange={(e) => filterbyEPUAddress(e)}>
-                {EPUAddresses?.map((item: any) => (
-                  <option value={item?.Title}>{item?.field_2}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Premise ID <span>*</span></label>
-              <select disabled={true} value={premiseIdSelected}>
-                {EPUAddresses?.map((item: any) => (
-                  <option value={item?.Title}>{item?.Title}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Pullet Grower <span>*</span></label>
-              <select value={pulletGrowerSelected} onChange={(e) => filterbyPulletGrower(e)}>
-                <option>Self Grown</option>
-                {pulletGrowers?.map((item: any) => (
-                  <option>{item?.field_1}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Hatchery <span>*</span></label>
-              <select value={hatcherySelected} onChange={(e) => filterbyHatchery(e)}>
-                {hatcheries?.map((item: any) => (
-                  <option value={item?.field_4}>{item?.field_4}</option>
-                ))}
-              </select>
-              {/* <input type='text' value={hatcheryOther} hidden={hatcherySelected != "Other"}></input> */}
-              <input type='text' value={hatcheryOther} onChange={(e) => setHatcheryOther(e.target.value)} hidden={hatcherySelected != "Other"} />
-            </div>
-          </div>
-        </div>
-        {/* ================= TABLE ================= */}
-        <div className="card">
-          <div className="section-header">
-            <h2>Barn Table</h2>
-            <button className="btn-add" onClick={openAddPopup}>Add Barn</button>
-          </div>
+        <div className="container ">
 
 
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Barn #</th>
-                  <th>Requested Hatch Date</th>
-                  <th># of Chicks Ordered</th>
-                  <th>Production Type</th>
-                  <th>Housing System</th>
-                  <th>Estimate Removal Date</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
 
-              <tbody>
+          <div className='sectioncontainer'>
 
-                {BarnTable.map((item: any) => (
-                  <tr key={item.id}>
-                    <td>{item?.Bc_Barn}</td>
-                    <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
-                    <td>{item?.Bc_OfChicksOrdered}</td>
-                    <td>{item?.Bc_ProductionType}</td>
-                    <td>{item?.Bc_HousingSystem}</td>
-                    <td>{item?.Bc_EstimateRemovalDate ? formatDateFromString(item.Bc_EstimateRemovalDate) : ''}</td>
-                    <td>
-                      <div className="actions">
-                        <span className="delete" onClick={() => deletingitem(item, item?.id)}><img src={deleteicon} /></span>
-                        <span className="edit" onClick={() => openEditPopup(item, item.id)}>
-                          <img src={editicon} />
+            {/* ================= POPUP ================= */}
+            {popup && (
+              <div className="modal-overlay">
+                <div className="modal-box">
+
+                  <h2>{formStatus === 'editing' ? 'Edit Barn' : 'Add Barn'}</h2>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Barn # <span>*</span></label>
+                      <select name="Bc_Barn" value={formData.Bc_Barn} onChange={handleChange}>
+                        <option value="">Select</option>
+                        {barn?.map((item: any) => (
+                          <option value={item?.BarnNumber}>{item?.BarnNumber}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Chicks Ordered <span>*</span></label>
+                      <input type="text" name="Bc_OfChicksOrdered" value={formData.Bc_OfChicksOrdered} onChange={handleChange} />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Requested Hatch Date <span>*</span></label>
+                      <input type="date" min={getCurrentDate()} name="Bc_RequestedHatchDate" value={formData.Bc_RequestedHatchDate} onChange={handleChange} />
+                    </div>
+                    <div className="form-group">
+                      <label>19 Week Date <span>*</span></label>
+                      <label>{oneNineWeekDate}</label>
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Production Type <span>*</span></label>
+                      <select name="Bc_ProductionType" value={formData.Bc_ProductionType} onChange={handleChange}>
+                        <option value="">Select</option>
+                        <option value="CAWH - Caged White">CAWH</option>
+                        <option value="FABR">FABR</option>
+                        <option value="FNBR">FNBR</option>
+                        <option value="FNWH">FNWH</option>
+                        <option value="ORBR">ORBR</option>
+                        <option value="CABR">CABR</option>
+                        <option value="CAWH - Caged White">CAWH</option>
+                        <option value="ENWH">ENWH</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Housing System <span>*</span></label>
+                      <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
+                        <option value="">Select</option>
+                        <option value="Conventional">Conventional</option>
+                        <option value="Enriched">Enriched</option>
+                        <option value="Free Run">Free Run</option>
+                        <option value="Free Range">Free Range</option>
+                        <option value="Organic">Organic</option>
+                        <option value="Aviary / Floor">Aviary / Floor</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Estimate Removal Date <span>(based on 72 weeks)</span></label>
+                      <input type="date" name="Bc_EstimateRemovalDate" value={sevenTwoWeekDate} onChange={handleChange} />
+                    </div>
+                    <div className="form-group">
+                      <label>Requested Removal Date <span></span></label>
+                      <input
+                        type="date"
+                        name="Bc_RequestedRemovalDate"
+                        disabled={enableEndDate ? false : true}
+                        value={formData.Bc_RequestedRemovalDate}
+                        onChange={handleChange} />                </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="quota-form-group checkbox-inline">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={formData.Bc_checkbox}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setEnableEndDate(checked);
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              Bc_checkbox: checked
+                            }));
+                          }} />
+                        <span className="different-date">
+                          I would like to pick a Requested Removal Date
                         </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </label>
+                    </div>
+                  </div>
 
-              </tbody>
-            </table>
+                  <div className="modal-actions">
+                    <button className="btn-cancel" onClick={() => setpopup(false)}>
+                      Cancel
+                    </button>
+                    <button
+                      className={`btn-save ${formStatus === "editing" ? "updateone" : ""}`}
+                      onClick={formStatus === "submitting" ? insertRowTemp : updatingFormTemp}>
+                      {formStatus === "submitting" ? "Save" : "Update"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ================= HEADER (UNCHANGED EXACTLY) ================= */}
+            <div className="header">
+              <div className="form-group">
+                <label>Producer <span>*</span></label>
+                <select value={producerkey} onChange={(e) => filterbyProducer(e)}>
+                  <option disabled selected>Select Producer</option>
+                  {Producers?.map((item: any) => (
+                    <option value={item?.ID}>{item?.Producer}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="header-buttons">
+                <button className="btn-cancel" onClick={handleAllCancel}>Cancel</button>
+                <button className="btn-history"
+                  style={applicationH ? { backgroundColor: '#ff9800', color: '#fff' } : { backgroundColor: '#f4f4f4' }}
+                  onClick={() => setapplicationH((prev: any) => !prev)}>Applications History</button>
+                <button className="btn-submit" onClick={() => submitCPPForm()}>Submit</button>
+              </div>
+            </div>
+
+            <div className="Applicationtable">
+              {applicationH &&
+                <div className="card">
+                  <div className="section-header">
+                    <h2>Application History</h2>
+                  </div>
+
+                  <div className="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Transaction #</th>
+                          <th>Barn #</th>
+                          <th>Status</th>
+                          <th>CCP#</th>
+                          <th>Hatch Date</th>
+                          <th>19 Week Date</th>
+                          <th># Ordered</th>
+                          <th>Request Removal Date</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {applicationhistory?.map((item: any) => {
+                          return (
+                            <tr>
+                              <td>{item.bcegg_CppRequestId.ID}</td>
+                              <td>{item.Bc_Barn}</td>
+                              <td>{item?.cppRequest?.bcegg_status}</td>
+                              <td>{item?.cppRequest?.bcegg_CPPNumber}</td>
+                              <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+                              <td>{item.bcegg_19WeekDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+                              <td>{item.Bc_OfChicksOrdered}</td>
+                              <td>{item.Bc_RequestedRemovalDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+                              <td>
+                                {item?.cppRequest?.bcegg_status === status.PendingApproval && (
+                                  <div className="actions">
+                                    <span
+                                      className="edit"
+                                      onClick={() => openEditPopup(item, item.id)}
+                                    >
+                                      <img src={editicon} />
+                                    </span>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+
+            </div>
+            {!applicationH &&
+              <div className='ProducerInformationsection'>
+                <div className="card">
+                  <h2>Producer Information</h2>
+
+                  <div className="grid-4">
+                    <div className="form-group">
+                      <label>EPU Address <span>*</span></label>
+                      <select onChange={(e) => filterbyEPUAddress(e)}>
+                        {EPUAddresses?.map((item: any) => (
+                          <option value={item?.Title}>{item?.field_2}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Premise ID <span>*</span></label>
+                      <select disabled={true} value={premiseIdSelected}>
+                        {EPUAddresses?.map((item: any) => (
+                          <option value={item?.Title}>{item?.Title}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Pullet Grower <span>*</span></label>
+                      <select value={pulletGrowerSelected} onChange={(e) => filterbyPulletGrower(e)}>
+                        <option>Self Grown</option>
+                        {pulletGrowers?.map((item: any) => (
+                          <option>{item?.field_1}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Hatchery <span>*</span></label>
+                      <select value={hatcherySelected} onChange={(e) => filterbyHatchery(e)}>
+                        {hatcheries?.map((item: any) => (
+                          <option value={item?.field_4}>{item?.field_4}</option>
+                        ))}
+                      </select>
+                      {/* <input type='text' value={hatcheryOther} hidden={hatcherySelected != "Other"}></input> */}
+                      <input type='text' value={hatcheryOther} onChange={(e) => setHatcheryOther(e.target.value)} hidden={hatcherySelected != "Other"} />
+                    </div>
+                  </div>
+                </div>
+                {/* ================= TABLE ================= */}
+                <div className="card">
+                  <div className="section-header">
+                    <h2>Barn Table</h2>
+                    <button className="btn-add" onClick={openAddPopup}>Add Barn</button>
+                  </div>
+
+
+                  <div className="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Barn #</th>
+                          <th>Requested Hatch Date</th>
+                          <th># of Chicks Ordered</th>
+                          <th>Production Type</th>
+                          <th>Housing System</th>
+                          <th>Estimate Removal Date</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+
+                        {BarnTable.map((item: any) => (
+                          <tr key={item.id}>
+                            <td>{item?.Bc_Barn}</td>
+                            <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+                            <td>{item?.Bc_OfChicksOrdered}</td>
+                            <td>{item?.Bc_ProductionType}</td>
+                            <td>{item?.Bc_HousingSystem}</td>
+                            <td>{item?.Bc_EstimateRemovalDate ? formatDateFromString(item.Bc_EstimateRemovalDate) : ''}</td>
+                            <td>
+                              <div className="actions">
+                                <span className="delete" onClick={() => deletingitem(item, item?.id)}><img src={deleteicon} /></span>
+                                <span className="edit" onClick={() => openEditPopup(item, item.id)}>
+                                  <img src={editicon} />
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            }
+
           </div>
-        </div>
 
-      </div>
-    </section>
+        </div>
+      </section>
+
+    </>
   );
 
 
