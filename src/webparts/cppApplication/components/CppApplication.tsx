@@ -220,6 +220,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   };
 
   const producerOnChange = async (producerNumber: string) => {
+    setproducerNoSelected(producerNumber);
     const producerpremises = await api.filterListItems(
       listNames.FinalProducerPremiseBarns,
       `Title eq '${producerNumber}'`,
@@ -357,6 +358,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       }
 
       let CPPPayload = CPPService.CPPRequestsFormpayload(status.PendingApproval, obj);
+      CPPPayload.bcegg_CPPNumber=CPPService.generateCppNumber(tempItems[0].Bc_RequestedHatchDate,producerNoSelected);
       let recordId = await api.insertRecord(listNames.CPPRequests, CPPPayload);
       const tempRows = BarnTable.filter((item: any) => item.id < 0);
 

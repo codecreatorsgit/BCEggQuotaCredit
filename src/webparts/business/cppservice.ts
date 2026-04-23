@@ -1,4 +1,4 @@
-import { formatDate } from "../common/utils/helperfunctions";
+import { formatDate, formatDateFromString } from "../common/utils/helperfunctions";
 import { ApiService } from "../services/apiservices";
 import { listNames, status } from '../common/constants/ListNames';
 
@@ -61,6 +61,7 @@ export class CPPService {
             bcegg_status: status,
             bcegg_premiseId: data.premiseIdSelected,
             bcegg_epuAddress: data.epuAddressSelected,
+            bcegg_CPPNumber:""
         }
         return payload
     }
@@ -77,6 +78,13 @@ export class CPPService {
         );
         return cppItems;
     }
+
+
+    static generateCppNumber( requestedHatchDate: any,  producerNumber: string | number ): string {
+        let formatedDate=formatDateFromString(requestedHatchDate);
+        return `BC-${formatedDate}-${producerNumber}`;
+    }
+
 
     public async fetchPendingApprovalBarns(cppIds: any): Promise<any> {
         const barnFilter = cppIds
