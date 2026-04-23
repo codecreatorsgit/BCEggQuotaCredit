@@ -61,10 +61,26 @@ export class CPPService {
             bcegg_status: status,
             bcegg_premiseId: data.premiseIdSelected,
             bcegg_epuAddress: data.epuAddressSelected,
-            bcegg_CPPNumber:""
+            bcegg_CPPNumber: ""
         }
         return payload
     }
+
+
+    static barnProductionMap(barnproductionmapping: any) {
+        const seen = new Set<string>();
+
+        return barnproductionmapping.filter((item: any) => {
+            const key = `${item.field_3}|${item.field_4}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        }).map((item: any) => ({
+            barn: item.field_3,
+            productionType: item.field_4
+        }));
+    }
+
 
     public async fetchPendingRequests(producerId: number): Promise<any> {
         let cppFilter = `bcegg_status eq '${status.PendingApproval}'`;
@@ -80,8 +96,8 @@ export class CPPService {
     }
 
 
-    static generateCppNumber( requestedHatchDate: any,  producerNumber: string | number ): string {
-        let formatedDate=formatDateFromString(requestedHatchDate);
+    static generateCppNumber(requestedHatchDate: any, producerNumber: string | number): string {
+        let formatedDate = formatDateFromString(requestedHatchDate);
         return `BC-${formatedDate}-${producerNumber}`;
     }
 
@@ -94,7 +110,7 @@ export class CPPService {
         let result = await this.api.filterListItemsWithExpand(
             listNames.ProducerBarn,
             barnFilter,
-            '*,bcegg_CppRequestId/Id',
+            '*,bcegg_CppRequestId/Id,bcegg_CppRequestId/bcegg_premiseId',
             'bcegg_CppRequestId'
         );
         return result;

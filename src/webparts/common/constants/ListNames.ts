@@ -18,7 +18,9 @@ export const listNames = {
     PulletGrowers: "Pullet Growers",
     Hatcheries:"Hatcheries",
     CPPRequests:"CPP Requests",
-    ProducerBarn:"ProducerBarn"
+    ProducerBarn:"ProducerBarn",
+    BarnProductionTypeMapping:"Barn Production Type Mapping",
+    ProductionandHousingType:"Production and Housing Type"
 };
 
 export const status = {

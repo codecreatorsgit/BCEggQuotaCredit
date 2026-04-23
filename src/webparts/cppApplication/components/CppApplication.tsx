@@ -28,9 +28,11 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const [EPUAddresses, setEPUAddresses] = React.useState<any>([]);
   const [pulletGrowers, setPulletGrowers] = React.useState<any>([]);
   const [hatcheries, setHatcheries] = React.useState<any>([]);
+  const [housingSystems, sethousingSystems] = React.useState<any>([]);
+  const [productionTypes, setproductionTypes] = React.useState<any>([]);
   const [barn, setBarn] = React.useState<any>([]);
   const [formStatus, setFormStatus] = React.useState<'submitting' | 'editing'>('submitting');
-  const [editId, setEditId] = React.useState<any>(null);
+  const [, setEditId] = React.useState<any>(null);
   const [oneNineWeekDate, setoneNineWeekDate] = React.useState<any>(null);
   const [sevenTwoWeekDate, setsevenTwoWeekDate] = React.useState<any>(null);
   const [formoneId, setformoneId]: any = React.useState(0);
@@ -54,14 +56,13 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
   React.useEffect(() => {
     const loadInit = async () => {
-      const user = await api.getCurrentUser();
 
+      const user = await api.getCurrentUser();
       const producers = await api.filterListItems(
         listNames.ProducerInformation,
         `BCEggAccount/Id eq ${user.Id}`,
         "*"
       );
-
       const hatcheries = await api.getListItems(
         listNames.Hatcheries,
         "*"
@@ -77,11 +78,10 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       getApplicationHisory()
 
     };
-
     loadInit();
   }, []);
 
-  const handleChange = (e: any) => {
+  const handleChange = async (e: any) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
     if (name === "Bc_RequestedHatchDate") {
@@ -89,9 +89,36 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       let week72Date = formatDate(CPPService.calculateWeekSevenTwoDate(value));
       setoneNineWeekDate(week19Date);
       setsevenTwoWeekDate(week72Date);
-      formData.Bc_EstimateRemovalDate = week72Date;
+      setFormData((prev: any) => ({
+        ...prev, Bc_EstimateRemovalDate: week72Date
+      }));
+    } else if (name === "Bc_Barn") {
+      selectProductionTypes(premiseIdSelected, value);
+    } else if (name === "Bc_ProductionType") {
+      selectHousingSystem(value)
     }
   };
+
+  const selectProductionTypes = async (premiseId: any, barn: any): Promise<void> => {
+    const mappingfilter = `field_2 eq '${premiseId.replace(/'/g, "''")}' and field_3 eq '${barn}'`;
+    const barnproductionmapping = await api.filterListItems(
+      listNames.BarnProductionTypeMapping,
+      `${mappingfilter}`,
+      "field_3,field_4"
+    );
+    setproductionTypes(CPPService.barnProductionMap(barnproductionmapping))
+  }
+
+    const selectHousingSystem = async (productiontype:any): Promise<void> => {
+    const productionandhoustingType = await api.filterListItems(
+        listNames.ProductionandHousingType, `bcegg_details eq '${productiontype}'`,
+        "Name,bcegg_details,bcegg_housingSystem"
+      );
+      sethousingSystems(productionandhoustingType);
+      setFormData((prev: any) => ({
+        ...prev, Bc_HousingSystem: productionandhoustingType[0].bcegg_housingSystem
+      }));
+  }
 
   async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
     const selectedId = Number(e.target.value);
@@ -175,11 +202,11 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setformoneId(item?.ID ?? id);
 
     const hatchDate = item.Bc_RequestedHatchDate
-      ? item.Bc_RequestedHatchDate.split('T')[0]
+      ? formatDate(item.Bc_RequestedHatchDate)
       : '';
 
     const removalDate = item.Bc_RequestedRemovalDate
-      ? item.Bc_RequestedRemovalDate.split('T')[0]
+      ? formatDate(item.Bc_RequestedRemovalDate)
       : '';
 
     // ================= FIX ADDED (NO REMOVAL) =================
@@ -192,6 +219,8 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     );
 
     const checkboxValue = temp?.Bc_checkbox ?? item?.Bc_checkbox ?? existing ?? false;
+    selectProductionTypes(item?.bcegg_CppRequestId?.bcegg_premiseId, item.Bc_Barn);
+    selectHousingSystem(item.Bc_ProductionType);
 
     setFormData({
       Bc_Barn: item.Bc_Barn,
@@ -305,7 +334,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       );
 
       const savedRows = await getPendingBarns(producerkey);
-          await getApplicationHisory();  
+      await getApplicationHisory();
 
       const tempRows = BarnTable.filter((tb: any) => tb.id < 0);
 
@@ -332,7 +361,6 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       console.error("Update Error:", error);
     }
   };
-  console.log(editId)
 
   const handleAllCancel = () => {
     window.location.href = "https://bcemb.sharepoint.com/sites/BCEggAdminPortal";
@@ -358,7 +386,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       }
 
       let CPPPayload = CPPService.CPPRequestsFormpayload(status.PendingApproval, obj);
-      CPPPayload.bcegg_CPPNumber=CPPService.generateCppNumber(tempItems[0].Bc_RequestedHatchDate,producerNoSelected);
+      CPPPayload.bcegg_CPPNumber = CPPService.generateCppNumber(tempItems[0].Bc_RequestedHatchDate, producerNoSelected);
       let recordId = await api.insertRecord(listNames.CPPRequests, CPPPayload);
       const tempRows = BarnTable.filter((item: any) => item.id < 0);
 
@@ -460,15 +488,9 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
 
   return (
     <>
-
       <section className={`${styles.cppApplication} ${hasTeamsContext ? styles.teams : ''}`}>
-
         <div className="container ">
-
-
-
           <div className='sectioncontainer'>
-
             {/* ================= POPUP ================= */}
             {popup && (
               <div className="modal-overlay">
@@ -505,33 +527,24 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                       <label>Production Type <span>*</span></label>
                       <select name="Bc_ProductionType" value={formData.Bc_ProductionType} onChange={handleChange}>
                         <option value="">Select</option>
-                        <option value="CAWH - Caged White">CAWH</option>
-                        <option value="FABR">FABR</option>
-                        <option value="FNBR">FNBR</option>
-                        <option value="FNWH">FNWH</option>
-                        <option value="ORBR">ORBR</option>
-                        <option value="CABR">CABR</option>
-                        <option value="CAWH - Caged White">CAWH</option>
-                        <option value="ENWH">ENWH</option>
+                        {productionTypes?.map((item: any) => (
+                          <option value={item?.productionType}>{item?.productionType}</option>
+                        ))}
                       </select>
                     </div>
                     <div className="form-group">
                       <label>Housing System <span>*</span></label>
-                      <select name="Bc_HousingSystem" value={formData.Bc_HousingSystem} onChange={handleChange}>
-                        <option value="">Select</option>
-                        <option value="Conventional">Conventional</option>
-                        <option value="Enriched">Enriched</option>
-                        <option value="Free Run">Free Run</option>
-                        <option value="Free Range">Free Range</option>
-                        <option value="Organic">Organic</option>
-                        <option value="Aviary / Floor">Aviary / Floor</option>
+                      <select name="Bc_HousingSystem" disabled={true} value={formData.Bc_HousingSystem} onChange={handleChange}>
+                        {housingSystems?.map((item: any) => (
+                          <option value={item?.bcegg_housingSystem}>{item?.bcegg_housingSystem}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
                   <div className="form-row">
                     <div className="form-group">
                       <label>Estimate Removal Date <span>(based on 72 weeks)</span></label>
-                      <input type="date" name="Bc_EstimateRemovalDate" value={sevenTwoWeekDate} onChange={handleChange} />
+                      <input type="date" name="Bc_EstimateRemovalDate" disabled={true} value={sevenTwoWeekDate} onChange={handleChange} />
                     </div>
                     <div className="form-group">
                       <label>Requested Removal Date <span></span></label>
