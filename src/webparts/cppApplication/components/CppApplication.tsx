@@ -17,7 +17,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const [popup, setpopup] = React.useState(false);
   const [enableEndDate, setEnableEndDate] = React.useState(false);
   const [producerkey, setproducerkey] = React.useState<any>('');
-  const [, setproducerNoSelected] = React.useState<any>('');
+  const [producerNoSelected, setproducerNoSelected] = React.useState<any>('');
   const [pulletGrowerSelected, setpulletGrowerSelected] = React.useState<any>('');
   const [epuAddressSelected, setepuAddressSelected] = React.useState<any>('');
   const [hatcherySelected, sethatcherySelected] = React.useState<any>('');
