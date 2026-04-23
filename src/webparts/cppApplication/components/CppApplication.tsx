@@ -193,7 +193,8 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       Bc_RequestedRemovalDate: '',
       Bc_checkbox: false
     });
-
+ setoneNineWeekDate(null);  
+  setsevenTwoWeekDate(null);
     setpopup(true);
   };
   const openEditPopup = (item: any, id: any) => {
@@ -518,8 +519,8 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                       <input type="date" min={getCurrentDate()} name="Bc_RequestedHatchDate" value={formData.Bc_RequestedHatchDate} onChange={handleChange} />
                     </div>
                     <div className="form-group">
-                      <label>19 Week Date <span>*</span></label>
-                      <label>{oneNineWeekDate}</label>
+                      <label>19 Week Date </label>
+                      <label>{oneNineWeekDate ? formatDateFromString(oneNineWeekDate) : ''}</label>
                     </div>
                   </div>
                   <div className="form-row">
