@@ -47,7 +47,8 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     Bc_HousingSystem: '',
     Bc_EstimateRemovalDate: '',
     Bc_RequestedRemovalDate: '',
-    Bc_checkbox: false
+    Bc_checkbox: false,
+    ID: 0
 
   });
 
@@ -109,15 +110,15 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setproductionTypes(CPPService.barnProductionMap(barnproductionmapping))
   }
 
-    const selectHousingSystem = async (productiontype:any): Promise<void> => {
+  const selectHousingSystem = async (productiontype: any): Promise<void> => {
     const productionandhoustingType = await api.filterListItems(
-        listNames.ProductionandHousingType, `bcegg_details eq '${productiontype}'`,
-        "Name,bcegg_details,bcegg_housingSystem"
-      );
-      sethousingSystems(productionandhoustingType);
-      setFormData((prev: any) => ({
-        ...prev, Bc_HousingSystem: productionandhoustingType[0].bcegg_housingSystem
-      }));
+      listNames.ProductionandHousingType, `bcegg_details eq '${productiontype}'`,
+      "Name,bcegg_details,bcegg_housingSystem"
+    );
+    sethousingSystems(productionandhoustingType);
+    setFormData((prev: any) => ({
+      ...prev, Bc_HousingSystem: productionandhoustingType[0].bcegg_housingSystem
+    }));
   }
 
   async function filterbyProducer(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -173,6 +174,10 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       alert(alerts.RequiredFields + BarnfieldNamesMap[emptyField]);
       return false;
     }
+    if (CPPService.validateBarn(BarnTable, formData) == true) {
+      alert(alerts.OneBarnAllowed);
+      return false;
+    }
 
     return true;
   };
@@ -191,10 +196,11 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       Bc_HousingSystem: '',
       Bc_EstimateRemovalDate: '',
       Bc_RequestedRemovalDate: '',
-      Bc_checkbox: false
+      Bc_checkbox: false,
+      ID: 0
     });
- setoneNineWeekDate(null);  
-  setsevenTwoWeekDate(null);
+    setoneNineWeekDate(null);
+    setsevenTwoWeekDate(null);
     setpopup(true);
   };
   const openEditPopup = (item: any, id: any) => {
@@ -231,7 +237,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       Bc_HousingSystem: item.Bc_HousingSystem,
       Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
       Bc_RequestedRemovalDate: removalDate,
-
+      ID: item.ID,
       Bc_checkbox: checkboxValue
     });
     setEnableEndDate(checkboxValue === true);
@@ -338,23 +344,17 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       await getApplicationHisory();
 
       const tempRows = BarnTable.filter((tb: any) => tb.id < 0);
-
       const normalizedSavedRows = savedRows.map((item: any) => {
-
-        const existing = tempRows.find(
-          (tb: any) =>
-            Number(tb.id) === Number(item.bcegg_CppRequestId?.ID)
+        const existing = tempRows.find((tb: any) =>
+          Number(tb.id) === Number(item.bcegg_CppRequestId?.ID)
         );
-
         return {
           ...item,
           ...(existing || {}),
           Bc_checkbox: existing?.Bc_checkbox ?? item?.Bc_checkbox ?? false
         };
       });
-
       setBarnTable([...normalizedSavedRows, ...tempRows]);
-
       alert(alerts.SuccessFullyupdated);
       setpopup(false);
 

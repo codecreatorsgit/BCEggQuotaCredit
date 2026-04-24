@@ -52,7 +52,7 @@ export const alerts = {
     
     Cppdeleteconfirm: "Are you sure you want to delete this Barn Table?",
     CppNotransactions: "Please Add ( Add Barn ) Entry First",
-
+OneBarnAllowed: "This Barn has already been added in a Pending Request.",
 
 }
 

@@ -9,13 +9,9 @@ export class CPPService {
         this.api = new ApiService(context)
     }
 
-    static validateBarn(barnsTotal: any, BarnTable: any): boolean {
-        const barnTableSet = new Set(
-            BarnTable.map((b: { Bc_barn: any; }) => String(b.Bc_barn))
-        );
-
-        return barnsTotal.every((barn: { BarnNumber: any; }) =>
-            barnTableSet.has(String(barn.BarnNumber))
+    static validateBarn(barnsTotal: any[], BarnTable: { Bc_Barn: any,ID:any }): boolean {
+        return barnsTotal.some((barn: { Bc_Barn: any,ID:any }) =>
+            Number(barn.Bc_Barn) === Number(BarnTable.Bc_Barn && barn.ID !== BarnTable.ID)
         );
     }
 
