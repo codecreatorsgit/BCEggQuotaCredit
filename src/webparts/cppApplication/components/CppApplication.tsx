@@ -115,6 +115,16 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       listNames.ProductionandHousingType, `bcegg_details eq '${productiontype}'`,
       "Name,bcegg_details,bcegg_housingSystem"
     );
+
+        if (!productionandhoustingType || productionandhoustingType.length === 0 || !productionandhoustingType[0]?.bcegg_housingSystem) {
+      sethousingSystems([]);
+      setFormData((prev: any) => ({
+        ...prev,
+        Bc_HousingSystem: '' 
+      }));
+      return;
+    }
+
     sethousingSystems(productionandhoustingType);
     setFormData((prev: any) => ({
       ...prev, Bc_HousingSystem: productionandhoustingType[0].bcegg_housingSystem
