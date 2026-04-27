@@ -209,6 +209,9 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       Bc_checkbox: false,
       ID: 0
     });
+      setproductionTypes([]); 
+      sethousingSystems([]); 
+
     setoneNineWeekDate(null);
     setsevenTwoWeekDate(null);
     setpopup(true);
@@ -520,7 +523,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                     </div>
                     <div className="form-group">
                       <label>Chicks Ordered <span>*</span></label>
-                      <input type="text" name="Bc_OfChicksOrdered" value={formData.Bc_OfChicksOrdered} onChange={handleChange} />
+                      <input type="number" name="Bc_OfChicksOrdered" value={formData.Bc_OfChicksOrdered} onChange={handleChange} />
                     </div>
                   </div>
                   <div className="form-row">
