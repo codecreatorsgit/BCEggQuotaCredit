@@ -72,7 +72,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       setHatcheries(hatcheries);
       setProducers(producers);
       setproducerkey(producers?.[0]?.ID);
-      await producerOnChange(producers?.[0]?.Title);
+      await producerOnChange(producers?.[0]?.Title, producers?.[0]?.Producer);
       setpulletGrowerSelected("Self Grown");
       sethatcherySelected(hatcheries[0].field_4);
       getPendingBarns(producers?.[0]?.ID);
@@ -81,6 +81,37 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     };
     loadInit();
   }, []);
+
+  React.useEffect(() => {
+  const loadBarns = async () => {
+    if (!premiseIdSelected || !producerkey) return;
+
+    const selectedProducer = Producers.find(
+      (x: any) => x.ID === producerkey
+    );
+
+    if (!selectedProducer) return;
+
+    const _barnMapping = await api.filterListItems(
+      listNames.BarnProductionTypeMapping,
+      `Title eq '${selectedProducer.Producer}' and field_2 eq '${premiseIdSelected}'`,
+      "*"
+    );
+
+    const premiseBarns = Array.from(
+      new Map(
+        _barnMapping
+          .map(item => ({ BarnNumber: item.field_3 }))
+          .filter(item => item.BarnNumber)
+          .map(item => [item.BarnNumber, item])
+      ).values()
+    );
+
+    setBarn(premiseBarns);
+  };
+
+  loadBarns();
+}, [premiseIdSelected, producerkey]);
 
   const handleChange = async (e: any) => {
     const { name, value } = e.target;
@@ -116,11 +147,11 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       "Name,bcegg_details,bcegg_housingSystem"
     );
 
-        if (!productionandhoustingType || productionandhoustingType.length === 0 || !productionandhoustingType[0]?.bcegg_housingSystem) {
+    if (!productionandhoustingType || productionandhoustingType.length === 0 || !productionandhoustingType[0]?.bcegg_housingSystem) {
       sethousingSystems([]);
       setFormData((prev: any) => ({
         ...prev,
-        Bc_HousingSystem: '' 
+        Bc_HousingSystem: ''
       }));
       return;
     }
@@ -149,16 +180,18 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setproducerNoSelected(producerNumber);
 
     await getPendingBarns(selectedId);
-    await producerOnChange(producerNumber);
+    await producerOnChange(producerNumber, selectedProducer.Producer);
 
     console.log("Selected Producer:", producerNumber);
     console.log("Farm Filter:", filtering);
   }
 
   async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
-    setpremiseIdSelected(e.target.value);
+    const _premiseID = e.target.value;
+    setpremiseIdSelected(_premiseID);
     setepuAddressSelected(e.target.name);
   }
+
 
   async function filterbyPulletGrower(e: React.ChangeEvent<HTMLSelectElement>) {
     setpulletGrowerSelected(e.target.value);
@@ -209,8 +242,8 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       Bc_checkbox: false,
       ID: 0
     });
-      setproductionTypes([]); 
-      sethousingSystems([]); 
+    setproductionTypes([]);
+    sethousingSystems([]);
 
     setoneNineWeekDate(null);
     setsevenTwoWeekDate(null);
@@ -268,22 +301,16 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setpopup(true);
   };
 
-  const producerOnChange = async (producerNumber: string) => {
+  const producerOnChange = async (producerNumber: string, ProducerFullName: any) => {
     setproducerNoSelected(producerNumber);
     const producerpremises = await api.filterListItems(
-      listNames.FinalProducerPremiseBarns,
-      `Title eq '${producerNumber}'`,
+      listNames.BarnProductionTypeMapping,
+      `Title eq '${ProducerFullName}'`,
       "*"
     );
     const premiseTitles = producerpremises
-      .map(item => item.field_1)
+      .map(item => item.field_2)
       .filter(Boolean); // remove null/undefined
-
-    const premiseBarns = producerpremises
-      .map(item => ({ BarnNumber: item.field_3 }))
-      .filter(item => item.BarnNumber);
-
-    setBarn(premiseBarns);
 
     const premiseFilterValues = premiseTitles
       .map(val => `Title eq '${val.replace(/'/g, "''")}'`) // escape single quotes
@@ -294,9 +321,11 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       `${premiseFilterValues}`,
       "*"
     );
+
+    const _premiseID=premises[0].Title;
     setEPUAddresses(premises);
     setepuAddressSelected(premises[0].field_2);
-    setpremiseIdSelected(premises[0].Title);
+    setpremiseIdSelected(_premiseID);
 
     const pulletGrowers = await api.filterListItems(
       listNames.PulletGrowers,
