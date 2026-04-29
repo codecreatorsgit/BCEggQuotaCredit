@@ -489,18 +489,20 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       'bcegg_producerId'
     );
 
-    const setdata = dataBarn?.map((item: any) => {
+    const setdata = (dataBarn || []).map((item: any) => {
       const cpp = datappc?.find(
         (cp: any) =>
           Number(item?.bcegg_CppRequestId?.ID) === Number(cp?.ID)
       );
 
+      if(!cpp) return;
+
       return {
         ...item,
         cppRequest: cpp || null
       };
-    });
-    setapplicationhistory(setdata || []);
+    }).filter((item: any) => item !== undefined);
+    setapplicationhistory(setdata);
 
   } catch (error) {
     console.error("getApplicationHisory error:", error);
@@ -686,14 +688,14 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                         {applicationhistory?.map((item: any) => {
                           return (
                             <tr>
-                              <td>{item.bcegg_CppRequestId.ID}</td>
-                              <td>{item.Bc_Barn}</td>
+                              <td>{item?.bcegg_CppRequestId?.ID}</td>
+                              <td>{item?.Bc_Barn}</td>
                               <td>{item?.cppRequest?.bcegg_status}</td>
                               <td>{item?.cppRequest?.bcegg_CPPNumber}</td>
                               <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
-                              <td>{item.bcegg_19WeekDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
-                              <td>{item.Bc_OfChicksOrdered}</td>
-                              <td>{item.Bc_RequestedRemovalDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+                              <td>{item?.bcegg_19WeekDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+                              <td>{item?.Bc_OfChicksOrdered}</td>
+                              <td>{item?.Bc_RequestedRemovalDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
                               <td>
                                 {item?.cppRequest?.bcegg_status === status.PendingApproval && (
                                   <div className="actions">
