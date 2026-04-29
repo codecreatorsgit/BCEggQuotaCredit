@@ -76,7 +76,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       setpulletGrowerSelected("Self Grown");
       sethatcherySelected(hatcheries[0].field_4);
       getPendingBarns(producers?.[0]?.ID);
-      getApplicationHisory()
+      getApplicationHisory(producers?.[0]?.ID)
 
     };
     loadInit();
@@ -180,6 +180,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setproducerNoSelected(producerNumber);
 
     await getPendingBarns(selectedId);
+    await getApplicationHisory(selectedId)
     await producerOnChange(producerNumber, selectedProducer.Producer);
 
     console.log("Selected Producer:", producerNumber);
@@ -383,7 +384,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       );
 
       const savedRows = await getPendingBarns(producerkey);
-      await getApplicationHisory();
+      // await getApplicationHisory();
 
       const tempRows = BarnTable.filter((tb: any) => tb.id < 0);
       const normalizedSavedRows = savedRows.map((item: any) => {
@@ -472,38 +473,41 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     }
   };
 
-  const getApplicationHisory = async () => {
-    try {
-      const dataBarn = await api.getListItemsWithExpand(
-        listNames.ProducerBarn,
-        '*,bcegg_CppRequestId/ID,bcegg_CppRequestId/Title',
-        'bcegg_CppRequestId'
+  const getApplicationHisory = async (producerId:number) => {
+  try {
+
+    const dataBarn = await api.getListItemsWithExpand(
+      listNames.ProducerBarn,
+      '*,bcegg_CppRequestId/ID,bcegg_CppRequestId/Title',
+      'bcegg_CppRequestId'
+    );
+
+    const datappc = await api.filterListItemsWithExpand(
+      listNames.CPPRequests,
+      `bcegg_producerId/Id eq '${producerId}'`,
+      '*,bcegg_producerId/Id',
+      'bcegg_producerId'
+    );
+
+    const setdata = dataBarn?.map((item: any) => {
+      const cpp = datappc?.find(
+        (cp: any) =>
+          Number(item?.bcegg_CppRequestId?.ID) === Number(cp?.ID)
       );
 
-      const datappc = await api.getListItems(
-        listNames.CPPRequests,
-        '*'
-      );
+      return {
+        ...item,
+        cppRequest: cpp || null
+      };
+    });
+    setapplicationhistory(setdata || []);
 
-      const setdata = dataBarn?.map((item: any) => {
-        const cpp = datappc?.find(
-          (cp: any) =>
-            Number(item?.bcegg_CppRequestId?.ID) === Number(cp?.ID)
-        );
-
-        return {
-          ...item,
-          cppRequest: cpp || null
-        };
-      });
-
-      console.log(setdata)
-
-      setapplicationhistory(setdata || []);
-    } catch (error) {
-      console.error("getApplicationHisory error:", error);
-    }
+  } catch (error) {
+    console.error("getApplicationHisory error:", error);
+  }
   };
+
+
 
 
   const deletingitem = async (item: any, id: any) => {
