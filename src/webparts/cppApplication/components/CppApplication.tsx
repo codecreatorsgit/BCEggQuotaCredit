@@ -284,8 +284,8 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       Bc_HousingSystem: item.Bc_HousingSystem,
       Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
       Bc_RequestedRemovalDate: removalDate,
-      ID: item.ID,
-      Bc_checkbox: checkboxValue
+      ID: item.ID === 0 ?item.id:item.ID,
+      Bc_checkbox: checkboxValue,
     });
     setEnableEndDate(checkboxValue === true);
 

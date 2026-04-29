@@ -10,8 +10,8 @@ export class CPPService {
     }
 
     static validateBarn(barnsTotal: any[], BarnTable: { Bc_Barn: any,ID:any }): boolean {
-        return barnsTotal.some((barn: { Bc_Barn: any,ID:any }) =>
-            Number(barn.Bc_Barn) === Number(BarnTable.Bc_Barn && barn.ID !== BarnTable.ID)
+        return barnsTotal.some((barn: { Bc_Barn: any,ID:any,id:any }) =>
+            (Number(barn.Bc_Barn) === Number(BarnTable.Bc_Barn)) && (barn.ID ===0? (barn.id !== BarnTable.ID):(barn.ID !== BarnTable.ID))
         );
     }
 
