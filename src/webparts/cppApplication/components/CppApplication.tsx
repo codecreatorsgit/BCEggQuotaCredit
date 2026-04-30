@@ -253,7 +253,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   const openEditPopup = (item: any, id: any) => {
     setFormStatus('editing');
     setEditId(item.id);
-    setformoneId(item?.ID ?? id);
+    setformoneId(id);
 
     const hatchDate = item.Bc_RequestedHatchDate
       ? formatDate(item.Bc_RequestedHatchDate)
@@ -378,7 +378,7 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
       );
 
       await api.updateRecord(
-        formoneId,
+        formData.ID,
         listNames.ProducerBarn,
         payload
       );
