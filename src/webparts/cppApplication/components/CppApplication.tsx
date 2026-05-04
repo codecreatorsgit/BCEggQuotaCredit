@@ -187,11 +187,23 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     console.log("Farm Filter:", filtering);
   }
 
-  async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
-    const _premiseID = e.target.value;
-    setpremiseIdSelected(_premiseID);
-    setepuAddressSelected(e.target.name);
+async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
+  const _premiseID = e.target.value;
+
+  setpremiseIdSelected(_premiseID);
+  setepuAddressSelected(_premiseID);
+
+  const data = await getPendingBarns(producerkey);
+
+  if (data) {
+    const filtered = data.filter(
+      (item: any) =>
+        item?.bcegg_CppRequestId?.bcegg_premiseId === _premiseID
+    );
+
+    setBarnTable(filtered);
   }
+}
 
 
   async function filterbyPulletGrower(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -787,28 +799,39 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
                         </tr>
                       </thead>
 
-                      <tbody>
+               <tbody>
+  {BarnTable
+    .filter((item: any) => {
+      if (!premiseIdSelected) return true;
 
-                        {BarnTable.map((item: any) => (
-                          <tr key={item.id}>
-                            <td>{item?.Bc_Barn}</td>
-                            <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
-                            <td>{item?.Bc_OfChicksOrdered}</td>
-                            <td>{item?.Bc_ProductionType}</td>
-                            <td>{item?.Bc_HousingSystem}</td>
-                            <td>{item?.Bc_EstimateRemovalDate ? formatDateFromString(item.Bc_EstimateRemovalDate) : ''}</td>
-                            <td>
-                              <div className="actions">
-                                <span className="delete" onClick={() => deletingitem(item, item?.id)}><img src={deleteicon} /></span>
-                                <span className="edit" onClick={() => openEditPopup(item, item.id)}>
-                                  <img src={editicon} />
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+      const itemPremise =
+        item?.bcegg_CppRequestId?.bcegg_premiseId ||
+        item?.bcegg_premiseId ||
+        premiseIdSelected; 
 
-                      </tbody>
+      return itemPremise === premiseIdSelected;
+    })
+    .map((item: any) => (
+      <tr key={item.id}>
+        <td>{item?.Bc_Barn}</td>
+        <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+        <td>{item?.Bc_OfChicksOrdered}</td>
+        <td>{item?.Bc_ProductionType}</td>
+        <td>{item?.Bc_HousingSystem}</td>
+        <td>{item?.Bc_EstimateRemovalDate ? formatDateFromString(item.Bc_EstimateRemovalDate) : ''}</td>
+        <td>
+          <div className="actions">
+            <span className="delete" onClick={() => deletingitem(item, item?.id)}>
+              <img src={deleteicon} />
+            </span>
+            <span className="edit" onClick={() => openEditPopup(item, item.id)}>
+              <img src={editicon} />
+            </span>
+          </div>
+        </td>
+      </tr>
+    ))}
+</tbody>
                     </table>
                   </div>
                 </div>
