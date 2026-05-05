@@ -85,7 +85,7 @@ export class CPPService {
         const cppItems: any = await this.api.filterListItemsWithExpand(
             listNames.CPPRequests,
             cppFilter,
-            'ID,bcegg_producerId/Id',
+            '*,ID,bcegg_producerId/Id',
             'bcegg_producerId'
         );
         return cppItems;

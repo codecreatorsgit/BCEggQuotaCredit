@@ -83,35 +83,35 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
   }, []);
 
   React.useEffect(() => {
-  const loadBarns = async () => {
-    if (!premiseIdSelected || !producerkey) return;
+    const loadBarns = async () => {
+      if (!premiseIdSelected || !producerkey) return;
 
-    const selectedProducer = Producers.find(
-      (x: any) => x.ID === producerkey
-    );
+      const selectedProducer = Producers.find(
+        (x: any) => x.ID === producerkey
+      );
 
-    if (!selectedProducer) return;
+      if (!selectedProducer) return;
 
-    const _barnMapping = await api.filterListItems(
-      listNames.BarnProductionTypeMapping,
-      `Title eq '${selectedProducer.Producer}' and field_2 eq '${premiseIdSelected}'`,
-      "*"
-    );
+      const _barnMapping = await api.filterListItems(
+        listNames.BarnProductionTypeMapping,
+        `Title eq '${selectedProducer.Producer}' and field_2 eq '${premiseIdSelected}'`,
+        "*"
+      );
 
-    const premiseBarns = Array.from(
-      new Map(
-        _barnMapping
-          .map(item => ({ BarnNumber: item.field_3 }))
-          .filter(item => item.BarnNumber)
-          .map(item => [item.BarnNumber, item])
-      ).values()
-    );
+      const premiseBarns = Array.from(
+        new Map(
+          _barnMapping
+            .map(item => ({ BarnNumber: item.field_3 }))
+            .filter(item => item.BarnNumber)
+            .map(item => [item.BarnNumber, item])
+        ).values()
+      );
 
-    setBarn(premiseBarns);
-  };
+      setBarn(premiseBarns);
+    };
 
-  loadBarns();
-}, [premiseIdSelected, producerkey]);
+    loadBarns();
+  }, [premiseIdSelected, producerkey]);
 
   const handleChange = async (e: any) => {
     const { name, value } = e.target;
@@ -187,23 +187,23 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     console.log("Farm Filter:", filtering);
   }
 
-async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
-  const _premiseID = e.target.value;
+  async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
+    const _premiseID = e.target.value;
 
-  setpremiseIdSelected(_premiseID);
-  setepuAddressSelected(_premiseID);
+    setpremiseIdSelected(_premiseID);
+    setepuAddressSelected(e.target.selectedOptions[0].innerText);
 
-  const data = await getPendingBarns(producerkey);
+    const data = await getPendingBarns(producerkey);
 
-  if (data) {
-    const filtered = data.filter(
-      (item: any) =>
-        item?.bcegg_CppRequestId?.bcegg_premiseId === _premiseID
-    );
+    if (data) {
+      const filtered = data.filter(
+        (item: any) =>
+          item?.bcegg_CppRequestId?.bcegg_premiseId === _premiseID
+      );
 
-    setBarnTable(filtered);
+      setBarnTable(filtered);
+    }
   }
-}
 
 
   async function filterbyPulletGrower(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -296,7 +296,7 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
       Bc_HousingSystem: item.Bc_HousingSystem,
       Bc_EstimateRemovalDate: item.Bc_EstimateRemovalDate,
       Bc_RequestedRemovalDate: removalDate,
-      ID: item.ID === 0 ?item.id:item.ID,
+      ID: item.ID === 0 ? item.id : item.ID,
       Bc_checkbox: checkboxValue,
     });
     setEnableEndDate(checkboxValue === true);
@@ -335,7 +335,7 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
       "*"
     );
 
-    const _premiseID=premises[0].Title;
+    const _premiseID = premises[0].Title;
     setEPUAddresses(premises);
     setepuAddressSelected(premises[0].field_2);
     setpremiseIdSelected(_premiseID);
@@ -476,8 +476,18 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
 
         console.log("Final Barn Data:", itemsbarn);
 
-        setBarnTable([...itemsbarn]);
-        return itemsbarn;
+        let records = itemsbarn?.map((item: any) => {
+          let finditem = cppItems?.find((cp: any) => cp?.ID === item?.bcegg_CppRequestId?.Id);
+          return {
+            ...item,
+            cpp: finditem || {}
+          }
+        })
+
+        console.log(records)
+
+        setBarnTable([...records]);
+        return records;
       }
 
     } catch (err) {
@@ -485,40 +495,40 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
     }
   };
 
-  const getApplicationHisory = async (producerId:number) => {
-  try {
+  const getApplicationHisory = async (producerId: number) => {
+    try {
 
-    const dataBarn = await api.getListItemsWithExpand(
-      listNames.ProducerBarn,
-      '*,bcegg_CppRequestId/ID,bcegg_CppRequestId/Title',
-      'bcegg_CppRequestId'
-    );
-
-    const datappc = await api.filterListItemsWithExpand(
-      listNames.CPPRequests,
-      `bcegg_producerId/Id eq '${producerId}'`,
-      '*,bcegg_producerId/Id',
-      'bcegg_producerId'
-    );
-
-    const setdata = (dataBarn || []).map((item: any) => {
-      const cpp = datappc?.find(
-        (cp: any) =>
-          Number(item?.bcegg_CppRequestId?.ID) === Number(cp?.ID)
+      const dataBarn = await api.getListItemsWithExpand(
+        listNames.ProducerBarn,
+        '*,bcegg_CppRequestId/ID,bcegg_CppRequestId/Title',
+        'bcegg_CppRequestId'
       );
 
-      if(!cpp) return;
+      const datappc = await api.filterListItemsWithExpand(
+        listNames.CPPRequests,
+        `bcegg_producerId/Id eq '${producerId}'`,
+        '*,bcegg_producerId/Id',
+        'bcegg_producerId'
+      );
 
-      return {
-        ...item,
-        cppRequest: cpp || null
-      };
-    }).filter((item: any) => item !== undefined);
-    setapplicationhistory(setdata);
+      const setdata = (dataBarn || []).map((item: any) => {
+        const cpp = datappc?.find(
+          (cp: any) =>
+            Number(item?.bcegg_CppRequestId?.ID) === Number(cp?.ID)
+        );
 
-  } catch (error) {
-    console.error("getApplicationHisory error:", error);
-  }
+        if (!cpp) return;
+
+        return {
+          ...item,
+          cppRequest: cpp || null
+        };
+      }).filter((item: any) => item !== undefined);
+      setapplicationhistory(setdata);
+
+    } catch (error) {
+      console.error("getApplicationHisory error:", error);
+    }
   };
 
 
@@ -684,6 +694,8 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
                     <table>
                       <thead>
                         <tr>
+                          <th>EPU Address</th>
+                          <th>Premise ID </th>
                           <th>Transaction #</th>
                           <th>Barn #</th>
                           <th>Status</th>
@@ -692,7 +704,9 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
                           <th>19 Week Date</th>
                           <th># Ordered</th>
                           <th>Request Removal Date</th>
-                          <th>Action</th>
+                          <th>Pullet Grower</th>
+                          <th>Hatchery</th>
+                          {/* <th>Action</th> */}
                         </tr>
                       </thead>
 
@@ -700,6 +714,8 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
                         {applicationhistory?.map((item: any) => {
                           return (
                             <tr>
+                              <td>{item?.cppRequest?.bcegg_epuAddress}</td>
+                              <td>{item?.cppRequest?.bcegg_premiseId}</td>
                               <td>{item?.bcegg_CppRequestId?.ID}</td>
                               <td>{item?.Bc_Barn}</td>
                               <td>{item?.cppRequest?.bcegg_status}</td>
@@ -708,7 +724,11 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
                               <td>{item?.bcegg_19WeekDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
                               <td>{item?.Bc_OfChicksOrdered}</td>
                               <td>{item?.Bc_RequestedRemovalDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
-                              <td>
+                              <td>{item?.cppRequest?.bcegg_pulletGrower}</td>
+                              <td>{item?.cppRequest?.bcegg_hatchery}</td>
+
+
+                              {/* <td>
                                 {item?.cppRequest?.bcegg_status === status.PendingApproval && (
                                   <div className="actions">
                                     <span
@@ -719,7 +739,7 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
                                     </span>
                                   </div>
                                 )}
-                              </td>
+                              </td> */}
                             </tr>
                           )
                         })}
@@ -789,49 +809,58 @@ async function filterbyEPUAddress(e: React.ChangeEvent<HTMLSelectElement>) {
                     <table>
                       <thead>
                         <tr>
+                          <th>EPU Address</th>
+                          <th>Premise ID </th>
                           <th>Barn #</th>
                           <th>Requested Hatch Date</th>
                           <th># of Chicks Ordered</th>
                           <th>Production Type</th>
                           <th>Housing System</th>
                           <th>Estimate Removal Date</th>
+                          <th>Pullet Grower</th>
+                          <th>Hatchery</th>
                           <th>Action</th>
                         </tr>
                       </thead>
 
-               <tbody>
-  {BarnTable
-    .filter((item: any) => {
-      if (!premiseIdSelected) return true;
+                      <tbody>
+                        {BarnTable
+                          .filter((item: any) => {
+                            if (!premiseIdSelected) return true;
 
-      const itemPremise =
-        item?.bcegg_CppRequestId?.bcegg_premiseId ||
-        item?.bcegg_premiseId ||
-        premiseIdSelected; 
+                            const itemPremise =
+                              item?.bcegg_CppRequestId?.bcegg_premiseId ||
+                              item?.bcegg_premiseId ||
+                              premiseIdSelected;
 
-      return itemPremise === premiseIdSelected;
-    })
-    .map((item: any) => (
-      <tr key={item.id}>
-        <td>{item?.Bc_Barn}</td>
-        <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
-        <td>{item?.Bc_OfChicksOrdered}</td>
-        <td>{item?.Bc_ProductionType}</td>
-        <td>{item?.Bc_HousingSystem}</td>
-        <td>{item?.Bc_EstimateRemovalDate ? formatDateFromString(item.Bc_EstimateRemovalDate) : ''}</td>
-        <td>
-          <div className="actions">
-            <span className="delete" onClick={() => deletingitem(item, item?.id)}>
-              <img src={deleteicon} />
-            </span>
-            <span className="edit" onClick={() => openEditPopup(item, item.id)}>
-              <img src={editicon} />
-            </span>
-          </div>
-        </td>
-      </tr>
-    ))}
-</tbody>
+                            return itemPremise === premiseIdSelected;
+                          })
+                          .map((item: any) => (
+                            <tr key={item.id}>
+                              <td>{item?.cpp?.bcegg_epuAddress}</td>
+                              <td>{item?.cpp?.bcegg_premiseId}</td>
+                              <td>{item?.Bc_Barn}</td>
+                              <td>{item?.Bc_RequestedHatchDate ? formatDateFromString(item.Bc_RequestedHatchDate) : ''}</td>
+                              <td>{item?.Bc_OfChicksOrdered}</td>
+                              <td>{item?.Bc_ProductionType}</td>
+                              <td>{item?.Bc_HousingSystem}</td>
+                              <td>{item?.Bc_EstimateRemovalDate ? formatDateFromString(item.Bc_EstimateRemovalDate) : ''}</td>
+                              <td>{item?.cpp?.bcegg_pulletGrower}</td>
+                              <td>{item?.cpp?.bcegg_hatchery}</td>
+
+                              <td>
+                                <div className="actions">
+                                  <span className="delete" onClick={() => deletingitem(item, item?.id)}>
+                                    <img src={deleteicon} />
+                                  </span>
+                                  <span className="edit" onClick={() => openEditPopup(item, item.id)}>
+                                    <img src={editicon} />
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
                     </table>
                   </div>
                 </div>
