@@ -348,19 +348,31 @@ const CppApplication: React.FC<ICppApplicationProps> = (props) => {
     setPulletGrowers(pulletGrowers);
   }
 
-  const insertRowTemp = () => {
-    if (!validateForm()) return;
-    const negativeIdCount = BarnTable.filter((i: any) => i.id < 0).length;
-    const negatedMaxId = -(negativeIdCount + 1);
+const insertRowTemp = () => {
+  if (!validateForm()) return;
 
-    setBarnTable((prev: any) => [
-      ...prev,
-      { ...formData, id: negatedMaxId }
-    ]);
+  const negativeIdCount = BarnTable.filter((i: any) => i.id < 0).length;
+  const negatedMaxId = -(negativeIdCount + 1);
 
-    alert(alerts.SuccessFullySubmited);
-    setpopup(false);
-  };
+  setBarnTable((prev: any) => [
+    ...prev,
+    {
+      ...formData,
+      id: negatedMaxId,
+
+      cpp: {
+        bcegg_epuAddress: epuAddressSelected,
+        bcegg_premiseId: premiseIdSelected,
+        bcegg_pulletGrower: pulletGrowerSelected,
+        bcegg_hatchery:
+          hatcherySelected === "Other" ? hatcheryOther : hatcherySelected
+      }
+    }
+  ]);
+
+  alert(alerts.SuccessFullySubmited);
+  setpopup(false);
+};
 
   const updatingFormTemp = async () => {
     try {
